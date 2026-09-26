@@ -1,0 +1,829 @@
+/* ==========================================================================
+   RakshaSetu Authority - Reusable UI Components
+   Theme: High-contrast Emergency Operations Center
+   Dual encoding: Never color alone (Icon + Label + Text)
+   ========================================================================== */
+
+/* 1. Priority Badges */
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: var(--font-mono);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.priority-badge.critical {
+  background: var(--color-critical-bg);
+  color: var(--color-critical);
+  border-color: var(--color-critical-border);
+}
+
+.priority-badge.high {
+  background: var(--color-high-bg);
+  color: var(--color-high);
+  border-color: var(--color-high-border);
+}
+
+.priority-badge.moderate {
+  background: var(--color-moderate-bg);
+  color: var(--color-moderate);
+  border-color: var(--color-moderate-border);
+}
+
+.priority-badge.resolved {
+  background: var(--color-resolved-bg);
+  color: var(--color-resolved);
+  border-color: var(--color-resolved-border);
+}
+
+/* 2. Status Badges (Incident & Resource Workflows) */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--bg-surface-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-medium);
+  white-space: nowrap;
+}
+
+.status-badge.unassigned {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.status-badge.assigned {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.status-badge.responding {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.status-badge.reached {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.status-badge.resolved {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+/* 3. Location State Badges - CRITICAL DISTINCTION */
+.location-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-family: var(--font-mono);
+  border: 1px solid transparent;
+}
+
+.location-type-badge.live {
+  background: var(--loc-live-bg);
+  color: var(--loc-live);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.location-type-badge.last-known {
+  background: var(--loc-last-known-bg);
+  color: var(--loc-last-known);
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+.location-type-badge.stale {
+  background: var(--loc-stale-bg);
+  color: var(--loc-stale);
+  border-color: rgba(139, 92, 246, 0.45);
+}
+
+.location-type-badge.offline {
+  background: var(--loc-offline-bg);
+  color: var(--loc-offline);
+  border-color: rgba(100, 116, 139, 0.45);
+}
+
+/* 4. Heartbeat Status Component */
+.heartbeat-status-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-medium);
+  font-size: 12px;
+}
+
+.heartbeat-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.heartbeat-indicator.recent {
+  background-color: var(--loc-live);
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+}
+
+.heartbeat-indicator.aging {
+  background-color: var(--loc-last-known);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+}
+
+.heartbeat-indicator.stale {
+  background-color: var(--color-critical);
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+}
+
+.heartbeat-indicator.unavailable {
+  background-color: var(--text-muted);
+}
+
+.heartbeat-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.heartbeat-time {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.heartbeat-age {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* 5. Network Mode Indicators */
+.network-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.network-pill.cellular {
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.network-pill.sms {
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.network-pill.offline {
+  color: #94a3b8;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+/* 6. Medical Alert Flag */
+.medical-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+/* 7. Incident Card (In Queue & Tables) */
+.incident-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.incident-card:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-highlight);
+  transform: translateY(-1px);
+}
+
+.incident-card.active {
+  border-color: var(--brand-primary);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.incident-card.critical {
+  border-left: 4px solid var(--color-critical);
+}
+
+.incident-card.high {
+  border-left: 4px solid var(--color-high);
+}
+
+.incident-card.moderate {
+  border-left: 4px solid var(--color-moderate);
+}
+
+.incident-card.resolved {
+  border-left: 4px solid var(--color-resolved);
+  opacity: 0.75;
+}
+
+.incident-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.incident-id-time {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.incident-id {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.incident-time-ago {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.incident-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.incident-location-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.incident-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.incident-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 11px;
+}
+
+.assigned-team-text {
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 8. Incident Drawer Components */
+.drawer-header {
+  padding: 16px 20px;
+  background: var(--bg-surface-elevated);
+  border-bottom: 1px solid var(--border-medium);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.drawer-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.drawer-id-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.drawer-id {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+}
+
+.drawer-close-btn {
+  background: transparent;
+  border: 1px solid var(--border-medium);
+  color: var(--text-secondary);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.drawer-close-btn:hover {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.drawer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.drawer-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Map Preview in Drawer */
+.drawer-map-preview {
+  height: 160px;
+  width: 100%;
+  border-radius: var(--radius-md);
+  background: #060a12;
+  border: 1px solid var(--border-medium);
+  overflow: hidden;
+  position: relative;
+}
+
+/* Disclaimer Callout Box */
+.ops-callout {
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #fde68a;
+}
+
+.ops-callout.critical {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+.ops-callout.info {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #93c5fd;
+}
+
+/* Details Key-Value Grid */
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detail-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.detail-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+/* Response Timeline Component */
+.response-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  padding-left: 20px;
+}
+
+.response-timeline::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  width: 2px;
+  background: var(--border-medium);
+}
+
+.timeline-step {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  gap: 2px;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -20px;
+  top: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  border: 2px solid var(--border-strong);
+}
+
+.timeline-step.completed .timeline-dot {
+  background: var(--color-resolved);
+  border-color: var(--color-resolved);
+}
+
+.timeline-step.current .timeline-dot {
+  background: var(--brand-primary);
+  border-color: #93c5fd;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.7);
+}
+
+.timeline-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.timeline-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Drawer Action Footer */
+.drawer-footer {
+  padding: 16px 20px;
+  background: var(--bg-surface-elevated);
+  border-top: 1px solid var(--border-medium);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.drawer-actions-row {
+  display: flex;
+  gap: 8px;
+}
+
+.workflow-step-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: none;
+}
+
+/* 9. Stretch and Roadmap Badges */
+.stretch-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--badge-stretch-bg);
+  color: var(--badge-stretch-color);
+  border: 1px solid var(--badge-stretch-border);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.roadmap-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--badge-roadmap-bg);
+  color: var(--badge-roadmap-color);
+  border: 1px solid var(--badge-roadmap-border);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* 10. Government Source Cards */
+.gov-source-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 20px;
+}
+
+.gov-source-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color var(--transition-fast);
+}
+
+.gov-source-card:hover {
+  border-color: var(--border-highlight);
+}
+
+.gov-source-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gov-agency-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gov-status-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.gov-source-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.gov-source-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* 11. Roadmap Feature Cards */
+.roadmap-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
+  padding: 20px;
+}
+
+.roadmap-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.roadmap-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.roadmap-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.roadmap-card-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* 12. Notification Center & Toast Popups */
+.toast-container {
+  position: fixed;
+  bottom: 50px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 200;
+  pointer-events: none;
+}
+
+.toast-item {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 320px;
+  max-width: 440px;
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.toast-item.critical {
+  border-left: 4px solid var(--color-critical);
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: 64px;
+  right: 20px;
+  width: 360px;
+  max-height: 480px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 105;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.notification-dropdown.open {
+  display: flex;
+}
+
+.notif-header {
+  padding: 12px 16px;
+  background: var(--bg-surface-elevated);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.notif-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.notif-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.notif-item:hover {
+  background: var(--bg-surface-hover);
+}
+
+.notif-item.unread {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.notif-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notif-time {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* 13. Empty, Loading, and Stale States */
+.ops-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  gap: 12px;
+}
+
+.ops-empty-icon {
+  width: 48px;
+  height: 48px;
+  opacity: 0.4;
+}
+
+.ops-empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.ops-empty-sub {
+  font-size: 12px;
+  max-width: 320px;
+}

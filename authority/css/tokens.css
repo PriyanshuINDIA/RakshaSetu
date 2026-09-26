@@ -1,0 +1,130 @@
+/* ==========================================================================
+   RakshaSetu Authority - Design Tokens & Variables
+   Theme: High-information Military/Civil-Defense Emergency Operations Center
+   ========================================================================== */
+
+:root {
+  /* Color Palette: EOC Dark Tactical Theme (Default for Command Center) */
+  --bg-primary: #0a0f1d;
+  --bg-surface: #0f172a;
+  --bg-surface-elevated: #1e293b;
+  --bg-surface-hover: #27354f;
+  --bg-surface-active: #334155;
+  --bg-glass: rgba(15, 23, 42, 0.88);
+
+  /* Border Colors */
+  --border-subtle: #1e293b;
+  --border-medium: #334155;
+  --border-strong: #475569;
+  --border-highlight: #64748b;
+
+  /* Typography Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-inverse: #020617;
+
+  /* Operational Incident Severity (Dual encoding with text + icons) */
+  --color-critical: #ef4444;
+  --color-critical-bg: rgba(239, 68, 68, 0.16);
+  --color-critical-border: rgba(239, 68, 68, 0.45);
+
+  --color-high: #f97316;
+  --color-high-bg: rgba(249, 115, 22, 0.16);
+  --color-high-border: rgba(249, 115, 22, 0.45);
+
+  --color-moderate: #eab308;
+  --color-moderate-bg: rgba(234, 179, 8, 0.16);
+  --color-moderate-border: rgba(234, 179, 8, 0.45);
+
+  --color-resolved: #10b981;
+  --color-resolved-bg: rgba(16, 185, 129, 0.16);
+  --color-resolved-border: rgba(16, 185, 129, 0.45);
+
+  --color-info: #06b6d4;
+  --color-info-bg: rgba(6, 182, 212, 0.16);
+  --color-info-border: rgba(6, 182, 212, 0.45);
+
+  /* Location Data States - CRITICAL OPERATIONAL DISTINCTION */
+  --loc-live: #22c55e;
+  --loc-live-bg: rgba(34, 197, 94, 0.18);
+  --loc-last-known: #f59e0b;
+  --loc-last-known-bg: rgba(245, 158, 11, 0.18);
+  --loc-stale: #8b5cf6;
+  --loc-stale-bg: rgba(139, 92, 246, 0.18);
+  --loc-offline: #64748b;
+  --loc-offline-bg: rgba(100, 116, 139, 0.2);
+
+  /* Tactical Map Overlay Colors */
+  --map-unsafe: #f43f5e;
+  --map-safe: #10b981;
+  --map-shelter: #0ea5e9;
+  --map-resource: #a855f7;
+
+  /* Stretch & Roadmap Badges */
+  --badge-stretch-bg: rgba(168, 85, 247, 0.2);
+  --badge-stretch-color: #c084fc;
+  --badge-stretch-border: rgba(168, 85, 247, 0.5);
+
+  --badge-roadmap-bg: rgba(59, 130, 246, 0.2);
+  --badge-roadmap-color: #60a5fa;
+  --badge-roadmap-border: rgba(59, 130, 246, 0.5);
+
+  /* Accent & Tactical Brand */
+  --brand-primary: #3b82f6;
+  --brand-primary-hover: #2563eb;
+  --brand-accent: #f43f5e;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, 'Fira Code', monospace;
+
+  /* Sizing & Spacing */
+  --sidebar-width: 250px;
+  --sidebar-collapsed-width: 68px;
+  --queue-width: 380px;
+  --drawer-width: 520px;
+  --header-height: 56px;
+  --statusbar-height: 36px;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-drawer: -8px 0 30px rgba(0, 0, 0, 0.65);
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="light"] {
+  --bg-primary: #f1f5f9;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f8fafc;
+  --bg-surface-hover: #e2e8f0;
+  --bg-surface-active: #cbd5e1;
+  --bg-glass: rgba(255, 255, 255, 0.92);
+
+  --border-subtle: #e2e8f0;
+  --border-medium: #cbd5e1;
+  --border-strong: #94a3b8;
+  --border-highlight: #64748b;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-inverse: #f8fafc;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+  --shadow-drawer: -4px 0 24px rgba(0, 0, 0, 0.2);
+}

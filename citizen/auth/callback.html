@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#121820">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>RakshaSetu: Citizen Account Verification</title>
+
+  <link rel="icon" type="image/svg+xml" href="../assets/icons/app-icon.svg">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/reset.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/app.css">
+
+  <style>
+    .callback-viewport {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-bg-app, #0F172A);
+      padding: 20px;
+    }
+    .callback-card {
+      background: var(--color-bg-card, #1E293B);
+      border: 1px solid var(--color-border-subtle, #334155);
+      border-radius: var(--radius-lg, 16px);
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+    .status-icon-box {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 28px;
+    }
+    .status-loading {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38BDF8;
+    }
+    .status-success {
+      background: rgba(34, 197, 94, 0.15);
+      color: #22C55E;
+    }
+    .status-error {
+      background: rgba(239, 68, 68, 0.15);
+      color: #EF4444;
+    }
+    .status-warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: #F59E0B;
+    }
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(56, 189, 248, 0.2);
+      border-top-color: #38BDF8;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="callback-viewport">
+    <div class="callback-card">
+      <div id="statusIcon" class="status-icon-box status-loading">
+        <div class="spinner"></div>
+      </div>
+
+      <h2 id="statusTitle" style="font-size: 20px; font-weight: 800; color: var(--color-text-primary, #F8FAFC); margin-bottom: 8px;">
+        Verifying Account...
+      </h2>
+
+      <p id="statusMessage" style="font-size: 13.5px; color: var(--color-text-secondary, #94A3B8); line-height: 1.5; margin-bottom: 24px;">
+        Please wait while we verify your citizen email confirmation with RakshaSetu security servers.
+      </p>
+
+      <div id="actionContainer" style="display: none;">
+        <button id="primaryBtn" class="btn btn-primary btn-full" style="min-height: 48px; font-size: 14px; font-weight: 700;">
+          Proceed to Citizen Portal
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { supabase } from '../js/supabase-client.js';
+
+    const statusIcon = document.getElementById('statusIcon');
+    const statusTitle = document.getElementById('statusTitle');
+    const statusMessage = document.getElementById('statusMessage');
+    const actionContainer = document.getElementById('actionContainer');
+    const primaryBtn = document.getElementById('primaryBtn');
+
+    function showState({ type, title, message, btnText, btnAction }) {
+      statusIcon.className = `status-icon-box status-${type}`;
+      if (type === 'loading') {
+        statusIcon.innerHTML = '<div class="spinner"></div>';
+      } else if (type === 'success') {
+        statusIcon.innerHTML = '✓';
+      } else if (type === 'warning') {
+        statusIcon.innerHTML = '⚠';
+      } else {
+        statusIcon.innerHTML = '✕';
+      }
+
+      statusTitle.textContent = title;
+      statusMessage.textContent = message;
+
+      if (btnText && btnAction) {
+        actionContainer.style.display = 'block';
+        primaryBtn.textContent = btnText;
+        primaryBtn.onclick = btnAction;
+      } else {
+        actionContainer.style.display = 'none';
+      }
+    }
+
+    async function processVerification() {
+      // 1. Check for errors in hash or query parameters
+      const hash = window.location.hash.substring(1);
+      const hashParams = new URLSearchParams(hash);
+      const searchParams = new URLSearchParams(window.location.search);
+
+      const errorDescription = hashParams.get('error_description') || searchParams.get('error_description');
+      const errorCode = hashParams.get('error_code') || searchParams.get('error_code');
+
+      if (errorDescription || errorCode) {
+        showState({
+          type: 'error',
+          title: 'Verification Link Expired',
+          message: errorDescription ? decodeURIComponent(errorDescription.replace(/\+/g, ' ')) : 'This confirmation link is invalid or has expired. Please sign in or request a new verification link.',
+          btnText: 'Back to Sign In',
+          btnAction: () => { window.location.href = '../index.html'; }
+        });
+        return;
+      }
+
+      // 2. Handle PKCE code exchange if present
+      const code = searchParams.get('code');
+      if (code) {
+        try {
+          await supabase.auth.exchangeCodeForSession(code);
+        } catch (e) {
+          console.warn('[RakshaSetu][Auth] Code exchange notice:', e);
+        }
+      }
+
+      // 3. Retrieve authenticated session from Supabase
+      let { data: { session }, error } = await supabase.auth.getSession();
+
+      // Wait briefly if session is being processed from hash
+      if (!session) {
+        await new Promise(resolve => {
+          const timer = setTimeout(resolve, 3500);
+          const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
+            if (s) {
+              session = s;
+              clearTimeout(timer);
+              subscription?.unsubscribe();
+              resolve();
+            }
+          });
+        });
+      }
+
+      if (!session || !session.user) {
+        showState({
+          type: 'warning',
+          title: 'No Session Detected',
+          message: 'Unable to establish an authenticated session from the verification link. If you already verified your account, please proceed to sign in.',
+          btnText: 'Go to Sign In',
+          btnAction: () => { window.location.href = '../index.html'; }
+        });
+        return;
+      }
+
+      const user = session.user;
+      console.log('[RakshaSetu][Auth] Verified session user:', user.email);
+
+      // 4. Fetch the user's role from trusted Supabase profiles table using user.id
+      let profile = null;
+      try {
+        const { data: profData, error: profError } = await supabase
+          .from('profiles')
+          .select('id, full_name, role, email')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (!profError && profData) {
+          profile = profData;
+        }
+      } catch (err) {
+        console.warn('[RakshaSetu][Auth] Profile lookup warning:', err);
+      }
+
+      const userRole = (profile?.role || 'citizen').toLowerCase().trim();
+
+      // 5. Enforce role-based access control (RBAC)
+      if (userRole === 'authority' || userRole === 'admin') {
+        // Authority account detected: strictly deny Citizen PWA entry and sign out
+        await supabase.auth.signOut();
+        showState({
+          type: 'warning',
+          title: 'Authority Account Detected',
+          message: 'This email is registered for District Authority Emergency Operations Center (EOC) personnel. Citizen PWA access is restricted. Please access your designated EOC console.',
+          btnText: 'Close Window',
+          btnAction: () => { window.location.href = '../index.html'; }
+        });
+        return;
+      }
+
+      // 6. Confirmed Citizen Account: Success
+      const displayName = profile?.full_name || user.user_metadata?.full_name || user.email;
+      showState({
+        type: 'success',
+        title: 'Email Verified Successfully',
+        message: `Welcome, ${displayName}! Your citizen account has been verified. You can now access all RakshaSetu emergency response services.`,
+        btnText: 'Enter Citizen Portal',
+        btnAction: () => {
+          window.location.href = '../index.html';
+        }
+      });
+
+      // Optional auto-redirect after 3.5 seconds
+      setTimeout(() => {
+        window.location.href = '../index.html';
+      }, 3500);
+    }
+
+    processVerification();
+  </script>
+</body>
+</html>

@@ -1,0 +1,688 @@
+/* RakshaSetu Core Application Layout & Screen Styles */
+
+/* ==========================================================================
+   1. App Layout & Mobile-First Frame
+   ========================================================================== */
+.app-viewport {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: #0B0F15; /* Dark outer ambient background on desktop */
+}
+
+.mobile-container {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  background-color: var(--color-app-bg);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+}
+
+/* ==========================================================================
+   2. Top Bar (Header)
+   ========================================================================== */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background-color: #121820;
+  color: #FFFFFF;
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-md);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.header-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--color-sos);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-extrabold);
+  font-size: var(--font-size-md);
+  color: #FFFFFF;
+}
+
+.header-titles {
+  display: flex;
+  flex-direction: column;
+}
+
+.header-title {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: 0.02em;
+  color: #FFFFFF;
+  line-height: 1.1;
+}
+
+.header-region {
+  font-size: var(--font-size-xs);
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sim-trigger-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #E2E8F0;
+  font-size: var(--font-size-xs);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.sim-trigger-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   3. Network State Banner (Always Visible Indicator)
+   ========================================================================== */
+.global-network-banner {
+  background: #1E293B;
+  color: #F1F5F9;
+  font-size: var(--font-size-xs);
+  padding: 6px var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.network-banner-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.network-banner-badge {
+  font-weight: var(--font-weight-bold);
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   4. Screen Content Viewport & Active Screen Logic
+   ========================================================================== */
+.screens-viewport {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 84px; /* Space for bottom nav */
+  position: relative;
+}
+
+.app-screen {
+  display: none;
+  padding: var(--space-4);
+  animation: fadeInScreen var(--transition-fast) ease-out;
+}
+
+.app-screen.active {
+  display: block;
+}
+
+@keyframes fadeInScreen {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Screen Section Headings */
+.section-heading {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: var(--space-4) 0 var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ==========================================================================
+   5. Bottom Navigation Bar (4 Main Screens Only)
+   ========================================================================== */
+.bottom-nav-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: 64px;
+  background-color: #121820;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: var(--z-nav);
+  padding: 0 var(--space-2);
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #94A3B8;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  gap: 4px;
+  transition: color var(--transition-fast);
+  position: relative;
+}
+
+.nav-item:hover {
+  color: #E2E8F0;
+}
+
+.nav-item.active {
+  color: #FF5252;
+  font-weight: var(--font-weight-bold);
+}
+
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 32px;
+  height: 3px;
+  background-color: #FF5252;
+  border-radius: 0 0 var(--radius-xs) var(--radius-xs);
+}
+
+.nav-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* ==========================================================================
+   6. Screen 1: Splash / Initialization
+   ========================================================================== */
+.splash-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: #0F141C;
+  color: #FFFFFF;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  text-align: center;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.splash-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.splash-logo-box {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, #D32F2F, #8E0000);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-4);
+  box-shadow: 0 0 40px rgba(211, 47, 47, 0.5);
+}
+
+.splash-app-name {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-extrabold);
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-1);
+}
+
+.splash-tagline {
+  font-size: var(--font-size-sm);
+  color: #94A3B8;
+  max-width: 280px;
+  margin-bottom: var(--space-6);
+}
+
+.splash-init-steps {
+  width: 100%;
+  max-width: 320px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-align: left;
+}
+
+.init-step-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-xs);
+  color: #CBD5E1;
+}
+
+.init-step-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #94A3B8;
+}
+
+.init-step-item.done .init-step-icon {
+  background: #2E7D32;
+  color: #FFFFFF;
+}
+
+/* ==========================================================================
+   7. Screen 4: SOS Emergency Flow
+   ========================================================================== */
+.sos-flow-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.location-capture-state {
+  background: #FFF5F5;
+  border: 2px solid #FFCDD2;
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  text-align: center;
+}
+
+.radar-spinner {
+  width: 64px;
+  height: 64px;
+  border: 4px solid #FFCDD2;
+  border-top-color: #D32F2F;
+  border-radius: var(--radius-full);
+  animation: spin 1s linear infinite;
+  margin: var(--space-3) auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.fallback-tier-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.tier-item {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.tier-badge {
+  font-size: 10px;
+  font-weight: var(--font-weight-extrabold);
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  background: #E2E8F0;
+  color: #334155;
+}
+
+.tier-item.active-tier {
+  border-color: var(--color-sos);
+  background: #FFFDFD;
+}
+
+.tier-item.active-tier .tier-badge {
+  background: var(--color-sos);
+  color: #FFFFFF;
+}
+
+/* ==========================================================================
+   8. Screen 5: Safety Assistant (Voice + Text + Offline NDMA)
+   ========================================================================== */
+.assistant-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 160px);
+}
+
+.assistant-mode-banner {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-xs);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.assistant-mode-banner.offline {
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  color: #334155;
+}
+
+.assistant-mode-banner.online {
+  background: #E0F2FE;
+  border: 1px solid #BAE6FD;
+  color: #0369A1;
+}
+
+.chat-history {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.chat-bubble {
+  max-width: 88%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+}
+
+.chat-bubble.user {
+  align-self: flex-end;
+  background-color: var(--color-info);
+  color: #FFFFFF;
+  border-bottom-right-radius: var(--radius-xs);
+}
+
+.chat-bubble.assistant {
+  align-self: flex-start;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  border-bottom-left-radius: var(--radius-xs);
+  box-shadow: var(--shadow-sm);
+}
+
+.chat-source-tag {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-top: var(--space-2);
+  padding-top: var(--space-1);
+  border-top: 1px solid var(--color-border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.voice-wave-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 24px;
+  margin: var(--space-2) 0;
+}
+
+.voice-wave-bar {
+  width: 4px;
+  height: 8px;
+  background: var(--color-info);
+  border-radius: var(--radius-full);
+  animation: wave 1.2s infinite ease-in-out;
+}
+
+.voice-wave-bar:nth-child(2) { animation-delay: 0.2s; height: 16px; }
+.voice-wave-bar:nth-child(3) { animation-delay: 0.4s; height: 24px; }
+.voice-wave-bar:nth-child(4) { animation-delay: 0.6s; height: 14px; }
+.voice-wave-bar:nth-child(5) { animation-delay: 0.8s; height: 18px; }
+
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
+.assistant-input-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+
+.voice-mic-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.voice-mic-btn.listening {
+  background: var(--color-sos);
+  color: #FFFFFF;
+  border-color: var(--color-sos-dark);
+  animation: pulseBeacon 1.5s infinite;
+}
+
+/* ==========================================================================
+   9. Screen 7: Safety Map
+   ========================================================================== */
+.map-screen-wrapper {
+  position: relative;
+  height: calc(100vh - 160px);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+#safetyLeafletMap {
+  width: 100%;
+  height: 100%;
+  background: #E2E8F0;
+}
+
+.map-control-overlay {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.map-overlay-btn {
+  background: #FFFFFF;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 6px 12px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-text-primary);
+}
+
+.map-overlay-btn:hover {
+  background: var(--color-surface-subtle);
+}
+
+/* Custom Marker Styling */
+.marker-pin {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  border: 2px solid #FFFFFF;
+}
+
+.marker-shelter { background-color: #2E7D32; }
+.marker-hospital { background-color: #D32F2F; }
+.marker-citizen { background-color: #0277BD; animation: pulseBeacon 2s infinite; }
+
+/* ==========================================================================
+   10. Screen 8: Health Guide (Do vs Don't Split Columns)
+   ========================================================================== */
+.health-tabs-row {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.health-tab-pill {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+}
+
+.health-tab-pill.active {
+  background: var(--color-info);
+  color: #FFFFFF;
+  border-color: var(--color-info-dark);
+}
+
+.dos-donts-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+.do-column {
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.dont-column {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+
+.guide-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-2);
+}
+
+.guide-badge-do {
+  color: #166534;
+  font-weight: var(--font-weight-bold);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.guide-badge-dont {
+  color: #991B1B;
+  font-weight: var(--font-weight-bold);
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* ==========================================================================
+   11. Network Simulator Modal / Drawer
+   ========================================================================== */
+.network-sim-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.sim-state-option {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sim-state-option:hover {
+  background: var(--color-surface-subtle);
+  border-color: var(--color-info);
+}
+
+.sim-state-option.selected {
+  border-color: var(--color-info);
+  background: #F0F9FF;
+  box-shadow: 0 0 0 2px var(--color-info-light);
+}
+
+.sim-state-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.sim-state-desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}

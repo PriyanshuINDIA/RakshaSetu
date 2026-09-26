@@ -1,0 +1,19 @@
+{
+  "name": "RakshaSetu: Citizen Disaster Response PWA",
+  "short_name": "RakshaSetu",
+  "description": "Last-mile emergency communication and disaster-response application for citizens.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0F141C",
+  "theme_color": "#D32F2F",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./assets/icons/app-icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["government", "utilities", "medical"]
+}

@@ -1,0 +1,152 @@
+/* RakshaSetu Design System Tokens: Serious Public-Safety Hierarchy */
+:root {
+  /* Color Palette - Disciplined Public Safety */
+  --color-sos: #C62828;
+  --color-sos-dark: #8E0000;
+  --color-sos-light: #FF8A80;
+  --color-sos-bg: #FFEBEE;
+
+  --color-warning: #E65100;
+  --color-warning-dark: #AC1900;
+  --color-warning-light: #FFB74D;
+  --color-warning-bg: #FFF3E0;
+
+  --color-safe: #1B5E20;
+  --color-safe-dark: #003300;
+  --color-safe-light: #81C784;
+  --color-safe-bg: #E8F5E9;
+
+  --color-info: #01579B;
+  --color-info-dark: #002F6C;
+  --color-info-light: #4FC3F7;
+  --color-info-bg: #E1F5FE;
+
+  /* Neutrals & Surfaces */
+  --color-app-bg: #EEF2F6;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-surface-subtle: #F8FAFC;
+  --color-border: #CBD5E1;
+  --color-border-subtle: #E2E8F0;
+  
+  --color-text-primary: #0F172A;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #64748B;
+  --color-text-inverse: #FFFFFF;
+
+  /* Maturity Badges */
+  --badge-mvp-bg: #E8F5E9;
+  --badge-mvp-text: #1B5E20;
+  --badge-mvp-border: #A5D6A7;
+
+  --badge-stretch-bg: #EDE7F6;
+  --badge-stretch-text: #4527A0;
+  --badge-stretch-border: #D1C4E9;
+
+  --badge-roadmap-bg: #ECEFF1;
+  --badge-roadmap-text: #37474F;
+  --badge-roadmap-border: #CFD8DC;
+
+  /* Typography */
+  --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Devanagari", "Noto Sans Bengali", "Noto Sans Gujarati", "Noto Sans Gurmukhi", "Noto Sans Kannada", "Noto Sans Malayalam", "Noto Sans Oriya", "Noto Sans Tamil", "Noto Sans Telugu", "Noto Sans Arabic", "Noto Sans Ol Chiki", "Noto Sans Meetei Mayek", "Helvetica Neue", Arial, sans-serif;
+  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.84375rem; /* 13.5px */
+  --font-size-base: 0.9375rem;/* 15px */
+  --font-size-md: 1.0625rem;  /* 17px */
+  --font-size-lg: 1.25rem;    /* 20px */
+  --font-size-xl: 1.5rem;     /* 24px */
+  --font-size-2xl: 1.875rem;  /* 30px */
+  --font-size-3xl: 2.25rem;   /* 36px */
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* Line Heights */
+  --line-height-tight: 1.25;
+  --line-height-base: 1.5;
+  --line-height-relaxed: 1.625;
+
+  /* Spacing */
+  --space-1: 0.25rem; /* 4px */
+  --space-2: 0.5rem;  /* 8px */
+  --space-3: 0.75rem; /* 12px */
+  --space-4: 1rem;    /* 16px */
+  --space-5: 1.25rem; /* 20px */
+  --space-6: 1.5rem;  /* 24px */
+  --space-8: 2rem;    /* 32px */
+  --space-10: 2.5rem; /* 40px */
+
+  /* Touch Targets (Mobile-first ergonomics) */
+  --touch-target-min: 48px;
+  --touch-target-lg: 56px;
+
+  /* Radii */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.06);
+  --shadow-sos: 0 12px 28px -4px rgba(198, 40, 40, 0.45);
+
+  /* Elevation / Z-index */
+  --z-base: 1;
+  --z-sticky: 100;
+  --z-nav: 200;
+  --z-sheet-backdrop: 300;
+  --z-sheet: 400;
+  --z-dialog-backdrop: 500;
+  --z-dialog: 600;
+  --z-toast: 700;
+  --z-sim-banner: 800;
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* High Contrast Mode for Low-Visibility / High Sun / Emergency Scenarios */
+body.high-contrast-mode {
+  --color-app-bg: #000000;
+  --color-surface: #121212;
+  --color-surface-elevated: #1E1E1E;
+  --color-surface-subtle: #242424;
+  --color-border: #4A4A4A;
+  --color-border-subtle: #333333;
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #E0E0E0;
+  --color-text-tertiary: #BDBDBD;
+  --color-sos: #FF1744;
+  --color-sos-bg: #2B0000;
+  --color-warning: #FF9100;
+  --color-warning-bg: #301700;
+  --color-safe: #00E676;
+  --color-safe-bg: #002914;
+  --color-info: #00B0FF;
+  --color-info-bg: #00223B;
+  --badge-roadmap-bg: #2C3437;
+  --badge-roadmap-text: #ECEFF1;
+}
+
+/* Accessible Large Text Mode */
+body.large-text-mode {
+  --font-size-xs: 0.875rem;
+  --font-size-sm: 1rem;
+  --font-size-base: 1.125rem;
+  --font-size-md: 1.25rem;
+  --font-size-lg: 1.5rem;
+  --font-size-xl: 1.75rem;
+  --font-size-2xl: 2.125rem;
+  --font-size-3xl: 2.625rem;
+}

@@ -1,0 +1,384 @@
+/* ==========================================================================
+   RakshaSetu Authority - Tactical Map Styling
+   Features: Dark EOC Cartography, Custom Vector Markers, Accuracy Radii,
+             Dual Encoding, Radar Pulses, Distinct Live vs Last-Known Glyphs
+   ========================================================================== */
+
+.map-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background-color: #0b111e;
+  overflow: hidden;
+}
+
+#eoc-main-map, #eoc-full-map {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Tactical Map Filter Floating Bar */
+.map-filter-bar {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  background: var(--bg-glass);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-full);
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: var(--shadow-md);
+  max-width: 95%;
+  overflow-x: auto;
+}
+
+.map-filter-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--transition-fast);
+}
+
+.map-filter-btn:hover {
+  background: var(--bg-surface-elevated);
+  color: var(--text-primary);
+}
+
+.map-filter-btn.active {
+  background: var(--brand-primary);
+  color: white;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.map-filter-btn.critical.active {
+  background: var(--color-critical);
+  border-color: var(--color-critical);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+
+/* Map Layer Switcher (Top-Right) */
+.map-layer-control {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 25;
+  background: var(--bg-glass);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: var(--shadow-md);
+}
+
+.map-layer-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.layer-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.layer-toggle-row input[type="checkbox"] {
+  accent-color: var(--brand-primary);
+  cursor: pointer;
+}
+
+/* Map Accuracy & Scale Legend (Bottom-Left) */
+.map-legend-box {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  z-index: 25;
+  background: var(--bg-glass);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  box-shadow: var(--shadow-md);
+  max-width: 280px;
+}
+
+.legend-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.legend-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.legend-swatch.live {
+  background: var(--loc-live);
+  box-shadow: 0 0 6px var(--loc-live);
+}
+
+.legend-swatch.last-known {
+  background: var(--loc-last-known);
+  border: 1px dashed white;
+}
+
+.legend-swatch.shelter {
+  background: var(--map-shelter);
+}
+
+.legend-swatch.resource {
+  background: var(--map-resource);
+}
+
+.legend-swatch.hazard {
+  background: var(--map-unsafe);
+}
+
+/* ==========================================================================
+   Tactical Marker Custom HTML Icons (Leaflet divIcon)
+   ========================================================================== */
+.tactical-marker-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.tactical-marker-wrap:hover {
+  transform: scale(1.15);
+  z-index: 999 !important;
+}
+
+/* Pulse Animation for Critical Emergency Signals */
+.marker-pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: radar-beacon 2s infinite ease-out;
+}
+
+.marker-pulse-ring.critical {
+  border: 2px solid var(--color-critical);
+  background: rgba(239, 68, 68, 0.25);
+}
+
+.marker-pulse-ring.live {
+  border: 2px solid var(--loc-live);
+  background: rgba(34, 197, 94, 0.2);
+}
+
+@keyframes radar-beacon {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+}
+
+/* Marker Body Glyph */
+.marker-pin {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  border: 2px solid white;
+  position: relative;
+  z-index: 2;
+}
+
+.marker-pin.critical {
+  background: var(--color-critical);
+  border-color: #fca5a5;
+}
+
+.marker-pin.high {
+  background: var(--color-high);
+  border-color: #fdba74;
+}
+
+.marker-pin.moderate {
+  background: var(--color-moderate);
+  border-color: #fef08a;
+}
+
+.marker-pin.resolved {
+  background: #475569;
+  border-color: #94a3b8;
+  opacity: 0.85;
+}
+
+.marker-pin.last-known {
+  background: #b45309;
+  border: 2px dashed #fbbf24;
+}
+
+.marker-pin.shelter {
+  background: #0284c7;
+  border-color: #7dd3fc;
+  border-radius: 8px;
+}
+
+.marker-pin.resource {
+  background: #9333ea;
+  border-color: #d8b4fe;
+  border-radius: 8px;
+}
+
+.marker-pin.unsafe-hazard {
+  background: #e11d48;
+  border: 2px solid #fda4af;
+  border-radius: 4px;
+}
+
+/* Floating Label on Marker */
+.marker-floating-label {
+  margin-top: 4px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid var(--border-medium);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.marker-floating-label.last-known {
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fbbf24;
+}
+
+/* Tactical Leaflet Popups */
+.leaflet-popup-content-wrapper {
+  background: var(--bg-surface-elevated) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-medium) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-lg) !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--bg-surface-elevated) !important;
+  border: 1px solid var(--border-medium) !important;
+}
+
+.popup-eoc-box {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 240px;
+}
+
+.popup-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.popup-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.popup-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.popup-accuracy-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.popup-action-btn {
+  background: var(--brand-primary);
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+  transition: background var(--transition-fast);
+}
+
+.popup-action-btn:hover {
+  background: var(--brand-primary-hover);
+}

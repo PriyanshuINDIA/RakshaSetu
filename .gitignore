@@ -1,0 +1,32 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+
+# Editor / OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Browser / test artifacts
+.chrome_*/
+scratch/
+test_results.json
+
+# Local development
+*.local
+
+# Build/cache
+dist/
+build/
+.cache/

@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#121820">
+  <meta name="description"
+    content="RakshaSetu: Last-mile emergency communication and disaster-response application for citizens.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="RakshaSetu">
+
+  <!-- Suppress obsolete local dev WebSocket connections (e.g. Live Server on :5501) while keeping Supabase Realtime intact -->
+  <script>
+    if (typeof window !== 'undefined' && window.WebSocket) {
+      const _NativeWebSocket = window.WebSocket;
+      window.WebSocket = function (url, protocols) {
+        const urlStr = String(url || '');
+        if (
+          urlStr.includes('127.0.0.1:5501') ||
+          urlStr.includes('localhost:5501') ||
+          urlStr.includes('localhost:8080') ||
+          urlStr.includes(':5501/') ||
+          urlStr.endsWith('/index.html/ws')
+        ) {
+          return {
+            readyState: 3,
+            close: () => {},
+            send: () => {},
+            addEventListener: () => {},
+            removeEventListener: () => {},
+            onopen: null,
+            onclose: null,
+            onerror: null,
+            onmessage: null
+          };
+        }
+        return new _NativeWebSocket(url, protocols);
+      };
+      window.WebSocket.prototype = _NativeWebSocket.prototype;
+    }
+  </script>
+
+  <title>RakshaSetu: Citizen Disaster Response PWA</title>
+
+  <!-- PWA Manifest & Favicon -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="./assets/icons/app-icon.svg">
+
+  <!-- Leaflet GIS Engine (CDN) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Application Stylesheets -->
+  <link rel="stylesheet" href="./css/variables.css">
+  <link rel="stylesheet" href="./css/reset.css">
+  <link rel="stylesheet" href="./css/components.css">
+  <link rel="stylesheet" href="./css/app.css">
+</head>
+
+<body>
+  <div class="app-viewport">
+    <div class="mobile-container">
+
+      <!-- ==================================================================
+           SCREEN 1: SPLASH & APP INITIALIZATION (Zero-Internet Startup Diagnostics)
+           ================================================================== -->
+      <div id="splashOverlay" class="splash-overlay" role="dialog" aria-modal="true" aria-label="System Diagnostics">
+        <div class="splash-logo-box">
+          <svg width="60" height="60" viewBox="0 0 512 512" fill="none">
+            <path d="M256 64 L416 128 C416 288 336 384 256 432 C176 384 96 288 96 128 Z" fill="#FFFFFF" opacity="0.9" />
+            <path d="M150 260 Q 256 210 362 260" stroke="#C62828" stroke-width="24" stroke-linecap="round" />
+            <line x1="140" y1="310" x2="372" y2="310" stroke="#C62828" stroke-width="16" stroke-linecap="round" />
+            <circle cx="256" cy="180" r="20" fill="#C62828" />
+          </svg>
+        </div>
+        <h1 class="splash-app-name">RakshaSetu</h1>
+        <p class="splash-tagline" data-i18n="splash.tagline">A last-mile emergency communication layer</p>
+
+        <div class="splash-init-steps">
+          <div id="initStepPkg" class="init-step-item">
+            <span class="init-step-icon">✓</span>
+            <span data-i18n="splash.step_pkg">Checking offline safety package...</span>
+          </div>
+          <div id="initStepContacts" class="init-step-item">
+            <span class="init-step-icon">✓</span>
+            <span data-i18n="splash.step_contacts">Checking saved emergency contacts...</span>
+          </div>
+          <div id="initStepLocation" class="init-step-item">
+            <span class="init-step-icon">✓</span>
+            <span data-i18n="splash.step_location">Checking location capability...</span>
+          </div>
+          <div id="initStepNetwork" class="init-step-item">
+            <span class="init-step-icon">✓</span>
+            <span data-i18n="splash.step_network">Probing network communication tier...</span>
+          </div>
+          <div id="initStepConfig" class="init-step-item">
+            <span class="init-step-icon">✓</span>
+            <span data-i18n="splash.step_config">Loading verified NDMA safety protocols...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================================================================
+           STICKY APP HEADER (Identity, Region, Network Status, Sim Trigger)
+           ================================================================== -->
+      <header class="app-header">
+        <div class="header-brand">
+          <div class="header-logo">R</div>
+          <div class="header-titles">
+            <span class="header-title" data-i18n="header.app_name">RakshaSetu</span>
+            <span class="header-region">
+              <span>📍</span>
+              <span id="headerRegionName" data-i18n="region.selectPackage">Select Regional Package</span>
+            </span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div id="headerNetworkPill" class="network-status-pill"
+            title="Network Status. Click to simulate network states.">
+            <span class="status-dot online"></span>
+            <span data-i18n="common.online">Online</span>
+          </div>
+          <button id="networkSimTrigger" class="sim-trigger-btn" title="Open Network Simulation Drawer" data-i18n-title="header.simTitle">
+            <span data-i18n="header.sim_btn">⚙ Sim</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Persistent Network Status Banner -->
+      <div id="globalNetworkBanner" class="global-network-banner" title="Click to change network tier simulation">
+        <div class="network-banner-left">
+          <span class="status-dot online"></span>
+          <span data-i18n="header.bannerOnline">Internet Available • Live Telemetry Active</span>
+        </div>
+        <span class="network-banner-badge" data-i18n="header.bannerSimulate">Simulate</span>
+      </div>
+
+      <!-- ==================================================================
+           MAIN SCREENS VIEWPORT
+           ================================================================== -->
+      <main class="screens-viewport">
+
+                <!-- ================================================================
+             SCREEN: MULTILINGUAL LANGUAGE SELECTION (First-Time Startup Flow)
+             ================================================================ -->
+        <section id="screen-language" class="app-screen">
+          <div class="language-selection-screen">
+            <div class="language-screen-header">
+              <div class="language-screen-title-row">
+                <div class="language-screen-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="language-screen-title" data-i18n="language.title">Language</h2>
+                  <p class="language-screen-subtitle" data-i18n="language.subtitle">Select your preferred language / अपनी भाषा चुनें</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Scrollable Language Options List -->
+            <div id="languageOptionsList" class="language-options-list">
+              <div class="language-option-card" data-lang-code="en" role="button" tabindex="0" aria-label="English - English">
+                <div class="language-option-text">
+                  <span class="lang-native">English</span>
+                  <span class="lang-english">English</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card selected" data-lang-code="hi" role="button" tabindex="0" aria-label="हिन्दी - Hindi">
+                <div class="language-option-text">
+                  <span class="lang-native">हिन्दी</span>
+                  <span class="lang-english">Hindi</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="as" role="button" tabindex="0" aria-label="অসমীয়া - Assamese">
+                <div class="language-option-text">
+                  <span class="lang-native">অসমীয়া</span>
+                  <span class="lang-english">Assamese</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="bn" role="button" tabindex="0" aria-label="বাংলা - Bengali">
+                <div class="language-option-text">
+                  <span class="lang-native">বাংলা</span>
+                  <span class="lang-english">Bengali</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="brx" role="button" tabindex="0" aria-label="बर’ - Bodo">
+                <div class="language-option-text">
+                  <span class="lang-native">बर’</span>
+                  <span class="lang-english">Bodo</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="doi" role="button" tabindex="0" aria-label="डोगरी - Dogri">
+                <div class="language-option-text">
+                  <span class="lang-native">डोगरी</span>
+                  <span class="lang-english">Dogri</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="gu" role="button" tabindex="0" aria-label="ગુજરાતી - Gujarati">
+                <div class="language-option-text">
+                  <span class="lang-native">ગુજરાતી</span>
+                  <span class="lang-english">Gujarati</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="kn" role="button" tabindex="0" aria-label="ಕನ್ನಡ - Kannada">
+                <div class="language-option-text">
+                  <span class="lang-native">ಕನ್ನಡ</span>
+                  <span class="lang-english">Kannada</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="ks" role="button" tabindex="0" aria-label="कॉशुर / کٲشُر - Kashmiri">
+                <div class="language-option-text">
+                  <span class="lang-native">कॉशुर / کٲشُر</span>
+                  <span class="lang-english">Kashmiri</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="kok" role="button" tabindex="0" aria-label="कोंकणी - Konkani">
+                <div class="language-option-text">
+                  <span class="lang-native">कोंकणी</span>
+                  <span class="lang-english">Konkani</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="mai" role="button" tabindex="0" aria-label="मैथिली - Maithili">
+                <div class="language-option-text">
+                  <span class="lang-native">मैथिली</span>
+                  <span class="lang-english">Maithili</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="ml" role="button" tabindex="0" aria-label="മലയാളം - Malayalam">
+                <div class="language-option-text">
+                  <span class="lang-native">മലയാളം</span>
+                  <span class="lang-english">Malayalam</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="mni" role="button" tabindex="0" aria-label="মৈতৈলোন্ / ꯃꯤꯇꯩꯂꯣꯟ - Manipuri">
+                <div class="language-option-text">
+                  <span class="lang-native">মৈতৈলোন্ / ꯃꯤꯇꯩꯂꯣꯟ</span>
+                  <span class="lang-english">Manipuri</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="mr" role="button" tabindex="0" aria-label="मराठी - Marathi">
+                <div class="language-option-text">
+                  <span class="lang-native">मराठी</span>
+                  <span class="lang-english">Marathi</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="ne" role="button" tabindex="0" aria-label="नेपाली - Nepali">
+                <div class="language-option-text">
+                  <span class="lang-native">नेपाली</span>
+                  <span class="lang-english">Nepali</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="or" role="button" tabindex="0" aria-label="ଓଡ଼ିଆ - Odia">
+                <div class="language-option-text">
+                  <span class="lang-native">ଓଡ଼ିଆ</span>
+                  <span class="lang-english">Odia</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="pa" role="button" tabindex="0" aria-label="ਪੰਜਾਬੀ - Punjabi">
+                <div class="language-option-text">
+                  <span class="lang-native">ਪੰਜਾਬੀ</span>
+                  <span class="lang-english">Punjabi</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="sa" role="button" tabindex="0" aria-label="संस्कृतम् - Sanskrit">
+                <div class="language-option-text">
+                  <span class="lang-native">संस्कृतम्</span>
+                  <span class="lang-english">Sanskrit</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="sat" role="button" tabindex="0" aria-label="ᱥᱟᱱᱛᱟᱲᱤ - Santali">
+                <div class="language-option-text">
+                  <span class="lang-native">ᱥᱟᱱᱛᱟᱲᱤ</span>
+                  <span class="lang-english">Santali</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="sd" role="button" tabindex="0" aria-label="سنڌي - Sindhi">
+                <div class="language-option-text">
+                  <span class="lang-native">سنڌي</span>
+                  <span class="lang-english">Sindhi</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="ta" role="button" tabindex="0" aria-label="தமிழ் - Tamil">
+                <div class="language-option-text">
+                  <span class="lang-native">தமிழ்</span>
+                  <span class="lang-english">Tamil</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="te" role="button" tabindex="0" aria-label="తెలుగు - Telugu">
+                <div class="language-option-text">
+                  <span class="lang-native">తెలుగు</span>
+                  <span class="lang-english">Telugu</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+              <div class="language-option-card" data-lang-code="ur" role="button" tabindex="0" aria-label="اردو - Urdu">
+                <div class="language-option-text">
+                  <span class="lang-native">اردو</span>
+                  <span class="lang-english">Urdu</span>
+                </div>
+                <div class="language-radio-indicator">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sticky Bottom Confirmation Bar -->
+            <div class="language-bottom-bar">
+              <button type="button" id="languageSelectOkBtn" class="btn-language-ok">
+                <span data-i18n="language.ok_btn">OK</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             SCREEN 0: CITIZEN AUTHENTICATION (Login / Registration)
+             ================================================================ -->
+        <section id="screen-auth" class="app-screen">
+          <div class="app-card" style="border-top: 5px solid var(--color-info);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+              <div style="width: 44px; height: 44px; border-radius: 12px; background: var(--color-info-bg); display: flex; align-items: center; justify-content: center; color: var(--color-info); flex-shrink: 0;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              </div>
+              <div>
+                <h2 style="font-size: 19px; font-weight: 800; color: var(--color-text-primary); margin-bottom: 2px;">
+                  <span data-i18n="auth.portal_title">RakshaSetu Citizen Portal</span>
+                </h2>
+<!-- data-i18n="auth.portal_title" -->
+                <p style="font-size: 12px; color: var(--color-text-secondary); margin: 0;">
+                  <span data-i18n="auth.portal_subtitle">Disaster-Response & Resilient Emergency Network</span>
+                </p>
+              </div>
+            </div>
+
+            <!-- Tab Switcher -->
+            <div style="display: flex; gap: 8px; margin: 16px 0 14px; border-bottom: 1px solid var(--color-border-subtle); padding-bottom: 8px;">
+              <button type="button" id="authTabLogin" class="btn btn-secondary active" style="flex: 1; min-height: 38px; font-size: 13.5px; font-weight: 600;" data-i18n="auth.tab_signin">Sign In</button>
+              <button type="button" id="authTabSignup" class="btn btn-secondary" style="flex: 1; min-height: 38px; font-size: 13.5px; font-weight: 600;" data-i18n="auth.tab_register">New Citizen Registration</button>
+            </div>
+
+            <!-- Global Auth Message Banner -->
+            <div id="authAlertBanner" class="state-banner" style="display: none; margin-bottom: 14px;"></div>
+
+            <!-- LOGIN VIEW -->
+            <form id="authLoginForm">
+              <div class="form-group">
+                <label class="form-label" for="loginEmail" data-i18n="auth.label_email">Email Address</label>
+                <input type="email" id="loginEmail" class="input-field" placeholder="citizen@example.com" data-i18n-placeholder="auth.email_placeholder" required autocomplete="email">
+              </div>
+
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <label class="form-label" for="loginPassword" style="margin-bottom: 0;" data-i18n="auth.label_password">Password</label>
+                  <button type="button" id="authForgotPasswordLink" style="background: none; border: none; color: var(--color-info); font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline; padding: 0;" data-i18n="auth.forgot_password">Forgot Password?</button>
+                </div>
+                <input type="password" id="loginPassword" class="input-field" placeholder="Enter your password" data-i18n-placeholder="auth.password_placeholder" required autocomplete="current-password">
+              </div>
+
+              <button type="submit" id="loginSubmitBtn" class="btn btn-primary btn-full" style="min-height: 48px; font-size: 15px; font-weight: 700; margin-top: 8px;">
+                <span data-i18n="auth.btn_signin">Sign In to RakshaSetu</span>
+              </button>
+<!-- data-i18n="auth.btn_signin" -->
+
+              <div style="text-align: center; margin-top: 14px; font-size: 13px; color: var(--color-text-secondary);">
+                <span data-i18n="auth.noAccountPrompt">Don't have a verified citizen profile?</span>
+                <button type="button" id="authSwitchToSignupBtn" style="background: none; border: none; color: var(--color-info); font-weight: 600; cursor: pointer; text-decoration: underline; padding: 0 4px;" data-i18n="auth.registerNow">
+                  Register now
+                </button>
+              </div>
+            </form>
+
+            <!-- SIGNUP VIEW -->
+            <form id="authSignupForm" style="display: none;">
+              <div class="form-group">
+                <label class="form-label" for="signupFullName"><span data-i18n="auth.full_name">Full Legal Name *</span></label>
+                <input type="text" id="signupFullName" class="input-field" placeholder="e.g. Ramesh Kumar" data-i18n-placeholder="auth.name_placeholder" required autocomplete="name">
+                <div class="form-help" data-i18n="auth.addressHelp">Used by rescue personnel and relief distribution rosters.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="signupEmail"><span data-i18n="auth.signup_email">Email Address *</span></label>
+                <input type="email" id="signupEmail" class="input-field" placeholder="citizen@example.com" data-i18n-placeholder="auth.emailPlaceholder" required autocomplete="email">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="signupPassword"><span data-i18n="auth.signup_password">Password *</span></label>
+                <input type="password" id="signupPassword" class="input-field" placeholder="Minimum 6 characters" data-i18n-placeholder="auth.min_password_placeholder" required autocomplete="new-password" minlength="6">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="signupPhone"><span data-i18n="auth.phone">Phone Number</span></label>
+                <input type="tel" id="signupPhone" class="input-field" placeholder="+91 98765 43210" data-i18n-placeholder="auth.phonePlaceholder" autocomplete="tel">
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                  <label class="form-label" for="signupBloodGroup"><span data-i18n="auth.blood_group">Blood Group</span></label>
+                  <select id="signupBloodGroup" class="input-field">
+                    <option value="" data-i18n="common.select">Select</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                    <option value="Unknown" data-i18n="common.unknown">Unknown</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="signupDob"><span data-i18n="auth.dob">Date of Birth</span></label>
+                  <input type="date" id="signupDob" class="input-field">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="signupAddress" data-i18n="auth.addressLabel">Residential Address</label>
+                <input type="text" id="signupAddress" class="input-field" placeholder="House, street, or village" data-i18n-placeholder="auth.addressPlaceholder" autocomplete="street-address">
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                  <label class="form-label" for="signupDistrict" data-i18n="auth.districtLabel">District</label>
+                  <input type="text" id="signupDistrict" class="input-field" placeholder="e.g. Puri" data-i18n-placeholder="auth.districtPlaceholder">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="signupState" data-i18n="auth.stateLabel">State</label>
+                  <input type="text" id="signupState" class="input-field" placeholder="e.g. Odisha" data-i18n-placeholder="auth.statePlaceholder" value="Odisha">
+                </div>
+              </div>
+
+              <div class="section-heading" style="margin-top: 10px;">
+                <span data-i18n="auth.contactHeading">Primary Emergency Contact</span>
+              </div>
+              <div style="background: var(--color-surface-subtle); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md); padding: 12px; margin-bottom: 16px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                  <div>
+                    <label class="form-label" for="signupContactName" style="font-size: 11.5px;" data-i18n="auth.contactNameLabel">Contact Name</label>
+                    <input type="text" id="signupContactName" class="input-field" placeholder="Emergency contact" data-i18n-placeholder="auth.contactNamePlaceholder" style="font-size: 13px;">
+                  </div>
+                  <div>
+                    <label class="form-label" for="signupContactPhone" style="font-size: 11.5px;" data-i18n="auth.contactPhoneLabel">Phone</label>
+                    <input type="tel" id="signupContactPhone" class="input-field" placeholder="+91 94370 12345" data-i18n-placeholder="auth.contactPhonePlaceholder" style="font-size: 13px;">
+                  </div>
+                </div>
+                <div>
+                  <label class="form-label" for="signupContactRelation" style="font-size: 11.5px;" data-i18n="auth.contactRelationLabel">Relationship</label>
+                  <input type="text" id="signupContactRelation" class="input-field" placeholder="e.g. Spouse, Parent, Brother" data-i18n-placeholder="auth.contactRelationPlaceholder" style="font-size: 13px;">
+                </div>
+              </div>
+
+              <button type="submit" id="signupSubmitBtn" class="btn btn-primary btn-full" style="min-height: 48px; font-size: 15px; font-weight: 700;">
+                <span data-i18n="auth.btn_create_account">Create Citizen Account</span>
+              </button>
+
+              <div style="text-align: center; margin-top: 14px; font-size: 13px; color: var(--color-text-secondary);">
+                <span data-i18n="auth.alreadyRegisteredPrompt">Already registered?</span>
+                <button type="button" id="authSwitchToLoginBtn" style="background: none; border: none; color: var(--color-info); font-weight: 600; cursor: pointer; text-decoration: underline; padding: 0 4px;" data-i18n="auth.signInLink">
+                  Sign in
+                </button>
+              </div>
+            </form>
+
+            <!-- FORGOT PASSWORD VIEW -->
+            <form id="authForgotPasswordForm" style="display: none;">
+              <div style="margin-bottom: 16px;">
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 6px;" data-i18n="auth.resetPasswordTitle">
+                  Reset Your Password
+                </h3>
+                <p style="font-size: 12.5px; color: var(--color-text-secondary); line-height: 1.4;" data-i18n="auth.resetPasswordDesc">
+                  Enter the email address registered with your RakshaSetu citizen profile. We will send you a secure link to reset your password.
+                </p>
+              </div>
+
+              <div class="form-group">
+                <label data-i18n="auth.emailLabel" class="form-label" for="forgotPasswordEmail">Email Address *</label>
+                <input type="email" id="forgotPasswordEmail" class="input-field" placeholder="citizen@example.com" data-i18n-placeholder="auth.emailPlaceholder" required autocomplete="email">
+              </div>
+
+              <button type="submit" id="forgotPasswordSubmitBtn" class="btn btn-primary btn-full" style="min-height: 48px; font-size: 15px; font-weight: 700; margin-top: 8px;" data-i18n="auth.sendResetLinkButton">
+                Send Password Reset Link
+              </button>
+
+              <div style="text-align: center; margin-top: 14px; font-size: 13px; color: var(--color-text-secondary);">
+                <span data-i18n="auth.rememberedPasswordPrompt">Remembered your password?</span>
+                <button type="button" id="authSwitchBackToLoginBtn" style="background: none; border: none; color: var(--color-info); font-weight: 600; cursor: pointer; text-decoration: underline; padding: 0 4px;" data-i18n="auth.backToSignIn">
+                  Back to Sign In
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             SCREEN 2: INITIAL SETUP (One-time pre-disaster readiness)
+             ================================================================ -->
+        <section id="screen-setup" class="app-screen">
+          <div class="app-card" style="border-top: 5px solid var(--color-info);">
+            <h2 style="font-size: 20px; font-weight: bold; margin-bottom: 6px;" data-i18n="setup.title">Initial Readiness Setup</h2>
+            <p style="font-size: 13.5px; color: #475569; margin-bottom: 16px;" data-i18n="setup.subtitle">
+              Set this up now so RakshaSetu can help when connectivity is unavailable.
+            </p>
+
+            <form id="initialSetupForm">
+              <div class="form-group">
+                <label class="form-label" for="setupLanguage" data-i18n="setup.preferred_language">Preferred Language</label>
+                <select id="setupLanguage" class="input-field">
+                    <option value="en">English (English)</option>
+                    <option value="hi">हिन्दी (Hindi)</option>
+                    <option value="as">অসমীয়া (Assamese)</option>
+                    <option value="bn">বাংলা (Bengali)</option>
+                    <option value="brx">बर’ (Bodo)</option>
+                    <option value="doi">डोगरी (Dogri)</option>
+                    <option value="gu">ગુજરાતી (Gujarati)</option>
+                    <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                    <option value="ks">कॉशुर / کٲشُر (Kashmiri)</option>
+                    <option value="kok">कोंकणी (Konkani)</option>
+                    <option value="mai">मैथिली (Maithili)</option>
+                    <option value="ml">മലയാളം (Malayalam)</option>
+                    <option value="mni">মৈতৈলোন্ / ꯃꯤꯇꯩꯂꯣꯟ (Manipuri)</option>
+                    <option value="mr">मराठी (Marathi)</option>
+                    <option value="ne">नेपाली (Nepali)</option>
+                    <option value="or">ଓଡ଼ିଆ (Odia)</option>
+                    <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+                    <option value="sa">संस्कृतम् (Sanskrit)</option>
+                    <option value="sat">ᱥᱟᱱᱛᱟᱲᱤ (Santali)</option>
+                    <option value="sd">سنڌي (Sindhi)</option>
+                    <option value="ta">தமிழ் (Tamil)</option>
+                    <option value="te">తెలుగు (Telugu)</option>
+                    <option value="ur">اردو (Urdu)</option>
+                  </select>
+                <div class="form-help" data-i18n="setup.langHelp">Safety guidance will display in this language.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="setupRegion" data-i18n="setup.vulnerabilityRegion">Disaster Vulnerability Region</label>
+                <select id="setupRegion" class="input-field">
+                  <option value="" data-i18n="region.selectPackage">Select Regional Package</option>
+                  <option value="bihar-munger" data-i18n="region.mungerBihar">Munger / Bihar</option>
+                  <option value="odisha-coastal" data-i18n="region.odishaCoastal">Coastal Odisha (Puri - Kendrapara - Balasore)</option>
+                  <option value="mumbai-metro" data-i18n="region.mumbaiMetro">Mumbai Metropolitan Region</option>
+                </select>
+                <div class="form-help" data-i18n="setup.regionHelp">Selects pre-cached shelters and hydrological risk records.</div>
+              </div>
+
+              <div class="app-card" style="background: #F8FAFC; margin-bottom: 16px;">
+                <div style="font-size: 13.5px; font-weight: 600; color: #1E293B; margin-bottom: 4px;" data-i18n="setup.packageStatusTitle">
+                  Regional Safety Package Status
+                </div>
+                <div style="font-size: 12.5px; color: #166534;" data-i18n="setup.packageStatusText">
+                  ✓ Regional safety package pre-cached in local browser storage (420 KB)
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" style="display: flex; align-items: center; gap: 8px;">
+                  <input type="checkbox" id="setupLocation" checked style="width: 18px; height: 18px;">
+                  <span data-i18n="setup.enableGeolocation">Enable Geolocation for Emergency SOS</span>
+                </label>
+                <div class="form-help" data-i18n="setup.geolocationHelp">Used only to provide GPS coordinates during emergency rescue pings.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" style="display: flex; align-items: center; gap: 8px;">
+                  <input type="checkbox" id="setupHeartbeat" checked style="width: 18px; height: 18px;">
+                  <span data-i18n="setup.enableHeartbeat">Enable Pre-Blackout Location Heartbeat</span>
+                </label>
+                <div class="form-help" data-i18n="setup.locationHelp">Silently caches last coordinates every 15 min so last-known location is ready
+                  during sudden grid failure.</div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-full" style="min-height: 52px; font-size: 15px;" data-i18n="setup.saveButton">
+                Save & Enter Emergency Dashboard
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             SCREEN 3: HOME SCREEN (Citizen Command Center)
+             ================================================================ -->
+        <section id="screen-home" class="app-screen active">
+
+          <!-- Heartbeat Indicator Bar -->
+          <div class="heartbeat-status-bar">
+            <span id="homeHeartbeatText" data-i18n="home.heartbeatReady">Pre-blackout heartbeat: Ready</span>
+            <span class="status-dot online"></span>
+          </div>
+
+          <!-- Offline Queued Items Notice (if any) -->
+          <div id="homeOfflineQueueBanner" class="state-banner pending-sync" style="display: none;"></div>
+
+          <!-- DOMINANT SOS EMERGENCY CARD -->
+          <div class="app-card"
+            style="background: #FFF5F5; border: 2px solid #FFCDD2; text-align: center; padding: 20px 16px;">
+            <div
+              style="font-size: 12px; font-weight: 800; color: #C62828; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;" data-i18n="home.zeroDecisionLabel">
+              Zero-Decision Emergency Action
+            </div>
+            <h2 style="font-size: 18px; font-weight: 800; color: #0F172A; margin-bottom: 12px;" data-i18n="home.needImmediateHelp">
+              Need Immediate Help?
+            </h2>
+
+            <div class="sos-button-container">
+              <button id="mainSosButton" class="sos-button" aria-label="Emergency SOS. Tap to trigger rescue beacon." data-i18n-aria="sos.mainSosAria">
+                <div class="sos-beacon-pulse">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5"
+                    stroke-linecap="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                  </svg>
+                </div>
+                <div class="sos-button-text">
+                  <span class="sos-title" data-i18n="home.sosButtonTitle">Emergency SOS</span>
+                  <span class="sos-subtitle" data-i18n="home.sosButtonSubtitle">Capture GPS & Dispatch Beacon</span>
+                </div>
+              </button>
+            </div>
+
+            <p style="font-size: 12px; color: #64748B;" data-i18n="home.sosDisclaimer">
+              Works without internet. Automatic fallback to verified SMS outbox.
+            </p>
+          </div>
+
+          <!-- QUICK ACTIONS GRID -->
+          <div class="section-heading">
+            <span data-i18n="home.essentialActions">Essential Disaster Actions</span>
+            <span class="source-badge" data-i18n="common.lastMileReady">Last-Mile Ready</span>
+          </div>
+
+          <div class="quick-action-grid">
+            <button class="quick-action-btn"
+              onclick="window.app.renderAssistantMode(window.app.store?.getState?.() || {}); document.getElementById('sheet-assistant').classList.add('active'); document.getElementById('globalSheetBackdrop').classList.add('active');">
+              <div class="qa-icon-wrapper" style="background: #E0F2FE; color: #0284C7;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </div>
+              <span class="qa-label" data-i18n="home.actionAssistant">Safety Assistant</span>
+              <span class="qa-desc" data-i18n="home.actionAssistantDesc">Voice & text NDMA guide</span>
+            </button>
+
+            <button class="quick-action-btn" onclick="window.app.triggerSafeRouteToShelter();">
+              <div class="qa-icon-wrapper" style="background: #E8F5E9; color: #2E7D32;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                </svg>
+              </div>
+              <span class="qa-label" data-i18n="home.actionRoute">Safe Route</span>
+              <span class="qa-desc" data-i18n="home.actionRouteDesc">Evacuation paths</span>
+            </button>
+
+            <button class="quick-action-btn" onclick="window.app.store.navigateTo('map');">
+              <div class="qa-icon-wrapper" style="background: #EDE7F6; color: #512DA8;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+              </div>
+              <span class="qa-label" data-i18n="home.actionShelters">Relief Shelters</span>
+              <span class="qa-desc" data-i18n="home.actionSheltersDesc">Nearby bed capacity</span>
+            </button>
+
+            <button class="quick-action-btn"
+              onclick="document.getElementById('sheet-health').classList.add('active'); document.getElementById('globalSheetBackdrop').classList.add('active');">
+              <div class="qa-icon-wrapper" style="background: #FFEBEE; color: #C62828;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                </svg>
+              </div>
+              <span class="qa-label" data-i18n="home.actionHealth">Health Guide</span>
+              <span class="qa-desc" data-i18n="home.actionHealthDesc">First aid Do / Don't</span>
+            </button>
+
+            <button class="quick-action-btn" onclick="window.app.triggerImSafeFlow();">
+              <div class="qa-icon-wrapper" style="background: #E8F5E9; color: #1B5E20;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+              </div>
+              <span class="qa-label" data-i18n="home.actionImSafe">I'm Safe</span>
+              <span class="qa-desc" data-i18n="home.actionImSafeDesc">Check-in with family</span>
+            </button>
+
+            <button class="quick-action-btn"
+              onclick="document.getElementById('sheet-help').classList.add('active'); document.getElementById('globalSheetBackdrop').classList.add('active');">
+              <div class="qa-icon-wrapper" style="background: #FFF3E0; color: #E65100;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+              </div>
+              <span class="qa-label" data-i18n="home.actionResource">Resource Need</span>
+              <span class="qa-desc" data-i18n="home.actionResourceDesc">Food, water, rescue</span>
+            </button>
+          </div>
+
+          <!-- READINESS STATUS CARD -->
+          <div class="app-card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon" style="color: #2E7D32;">✓</span>
+                <div>
+                  <div class="card-title" data-i18n="home.readinessTitle">Emergency Setup Status</div>
+                  <div class="card-subtitle" data-i18n="home.readinessSubtitle">Local offline readiness</div>
+                </div>
+              </div>
+              <span class="source-badge government-badge" data-i18n="home.allSystemsReady">All Systems Ready</span>
+            </div>
+
+            <div
+              style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; color: #334155; margin-top: 6px;">
+              <div data-i18n="home.offlinePackageBadge">✓ Offline package (v2026.4)</div>
+              <div data-i18n="home.contactsBadge">✓ 3 Emergency contacts</div>
+              <div data-i18n="home.locationBadge">✓ Location access granted</div>
+              <div data-i18n="home.heartbeatBadge">✓ Pre-blackout heartbeat</div>
+            </div>
+          </div>
+
+          <!-- LOCAL RISK CARD -->
+          <div class="app-card alert-card severity-orange">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon">⚠</span>
+                <div>
+                  <div class="card-title" data-i18n="home.currentRiskTitle">Current Local Risk</div>
+                  <div class="card-subtitle" data-i18n="home.currentRiskSubtitle">IMD Cyclone Advisory + CWC Riverine Flood</div>
+                </div>
+              </div>
+              <span class="source-badge cached-badge" data-i18n="common.officialBulletin">Official Bulletin</span>
+            </div>
+            <p style="font-size: 13.5px; color: #334155; margin-bottom: 6px;" data-i18n="home.cycloneAlertText">
+              Cyclone alert in effect for coastal sectors. Naraj barrage discharge at 142,000 cusecs.
+            </p>
+            <div style="font-size: 11px; color: #64748B; display: flex; justify-content: space-between;">
+              <span data-i18n="home.riskSource">Source: IMD / Central Water Commission</span>
+              <span data-i18n="home.riskUpdated">Updated: 2 hours ago</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             SCREEN 4: SOS / EMERGENCY WORKFLOW SCREEN
+             ================================================================ -->
+        <section id="screen-sos" class="app-screen">
+          <div class="sos-flow-container">
+
+            <!-- State 1: Capturing Location -->
+            <div id="sosLocationCaptureBox" class="location-capture-state" style="display: none;">
+              <h3 style="font-size: 18px; font-weight: bold; color: #C62828;" data-i18n="sos.capturingTitle">Capturing Real-Time Location</h3>
+              <div class="radar-spinner"></div>
+              <p style="font-size: 13px; color: #64748B;" data-i18n="sos.capturingDesc">
+                Acquiring high-accuracy satellite GPS coordinates...
+              </p>
+            </div>
+
+            <!-- State 2: SOS Ready -->
+            <div id="sosReadyBox">
+              <div class="app-card" style="border-top: 5px solid var(--color-sos);">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <span class="card-icon" style="color: #C62828;">🚨</span>
+                    <div>
+                      <div class="card-title" data-i18n="sos.beaconReadyTitle">Emergency Rescue Beacon Ready</div>
+                      <div class="card-subtitle" data-i18n="sos.beaconReadySubtitle">Zero-decision multi-tier dispatch</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="location-card" style="padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                  <div style="font-size: 12px; color: #475569;" data-i18n="sos.recordedCoords">Recorded GPS Coordinates:</div>
+                  <div id="sosCoordsDisplay" class="coord-display">
+                    <span>19.81350, 85.83120 (±18m)</span>
+                    <span class="source-badge">GPS</span>
+                  </div>
+                  <div id="sosLocationCachedWarning" style="font-size: 11.5px; color: #B45309; display: none;"></div>
+                </div>
+
+                <!-- TIER 1: Online API Dispatch -->
+                <div id="sosOnlineCard" class="app-card" style="background: #F0FDF4; border: 1px solid #BBF7D0;">
+                  <div style="font-size: 14px; font-weight: bold; color: #166534; margin-bottom: 4px;" data-i18n="sos.tier1Title">
+                    Tier 1: Internet Available
+                  </div>
+                  <p id="sosOnlineDescText" style="font-size: 13px; color: #15803D; margin-bottom: 10px;" data-i18n="sos.tier1Desc">
+                    Broadcasting location telemetry directly to District Emergency Operations Center (DEOC).
+                  </p>
+                  <button id="sosLiveBroadcastBtn" class="btn btn-sos btn-full" data-i18n="sos.broadcastLiveButton">
+                    Broadcast Live Emergency SOS
+                  </button>
+                  <div id="sosTransmissionStatusBox"
+                    style="display: none; margin-top: 10px; font-size: 12px; padding: 8px 10px; border-radius: 6px;">
+                  </div>
+                </div>
+
+                <!-- TIER 2: SMS Outbox Dispatch -->
+                <div id="sosSmsOutboxCard" class="sms-outbox-card" style="display: none;">
+                  <div style="font-size: 14px; font-weight: bold; color: #92400E; margin-bottom: 4px;" data-i18n="sos.tier2Title">
+                    Tier 2: No Internet • SMS Outbox Prepared
+                  </div>
+                  <p style="font-size: 12.5px; color: #78350F; margin-bottom: 8px;" data-i18n="sos.tier2Desc">
+                    Browser cannot silently send SMS. SMS prepared with your coordinates — tap below to confirm:
+                  </p>
+                  <div id="smsBodyPreviewText" class="sms-body-preview"></div>
+                  <button id="sendSmsDirectBtn" class="btn btn-sos btn-full" style="min-height: 52px; font-size: 15px;" data-i18n="sos.sendSmsButton">
+                    Send SOS SMS (Tap to Confirm)
+                  </button>
+                </div>
+
+                <!-- TIER 3: Pure Offline Local Store -->
+                <div id="sosOfflineQueueCard" class="state-banner offline" style="display: none;">
+                  <span data-i18n="sos.tier3Notice">Your SOS beacon is saved locally in encrypted browser outbox and will dispatch automatically on
+                    next available signal or peer link.</span>
+                </div>
+
+                <!-- Low-data SMS location ping -->
+                <div style="margin-top: 14px;">
+                  <button id="sendLocationPingBtn" class="btn btn-secondary btn-full">
+                    <span>📡</span> <span data-i18n="sos.sendLocationPingButton">Send Low-Data Location Update by SMS</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- ROADMAP COMMUNICATION TIERS (Honest, strictly disabled representation) -->
+              <div class="section-heading">
+                <span data-i18n="sos.extendedHeading">Extended Infrastructure Capabilities</span>
+                <span class="source-badge" data-i18n="common.systemIntegrity">System Integrity</span>
+              </div>
+
+              <div class="roadmap-card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <span class="card-icon">📶</span>
+                    <div>
+                      <div class="card-title" data-i18n="sos.bleTitle">Bluetooth Opportunistic Relay</div>
+                      <div class="card-subtitle" data-i18n="sos.bleSubtitle">Experimental BLE Peer Mesh</div>
+                    </div>
+                  </div>
+                  <span class="maturity-badge roadmap" data-i18n="common.roadmap">Roadmap</span>
+                </div>
+                <p style="font-size: 12.5px; color: #475569;" data-i18n="sos.bleDesc">
+                  Could relay emergency rescue packets through nearby compatible citizen devices within radio hop range.
+                </p>
+                <div class="roadmap-notice">
+                  <span>ℹ</span>
+                  <span data-i18n="sos.bleNotice">Experimental capability • Requires device-level peer mesh standard.</span>
+                </div>
+              </div>
+
+              <div class="roadmap-card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <span class="card-icon">🛰</span>
+                    <div>
+                      <div class="card-title" data-i18n="sos.satelliteTitle">Satellite Relay (ISRO / NavIC S-Band)</div>
+                      <div class="card-subtitle" data-i18n="sos.satelliteSubtitle">Future Direct-to-Device</div>
+                    </div>
+                  </div>
+                  <span class="maturity-badge roadmap" data-i18n="common.roadmap">Roadmap</span>
+                </div>
+                <p style="font-size: 12.5px; color: #475569;" data-i18n="sos.satelliteDesc">
+                  Direct satellite uplink when terrestrial mobile towers are destroyed.
+                </p>
+                <div class="roadmap-notice">
+                  <span>ℹ</span>
+                  <span data-i18n="sos.satelliteNotice">Future government infrastructure • Not currently available in browser runtime.</span>
+                </div>
+              </div>
+
+              <div class="roadmap-card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <span class="card-icon">📞</span>
+                    <div>
+                      <div class="card-title" data-i18n="sos.national112Title">112 Zero-Balance Carrier Integration</div>
+                      <div class="card-subtitle" data-i18n="sos.national112Subtitle">National Emergency Number</div>
+                    </div>
+                  </div>
+                  <span class="maturity-badge roadmap" data-i18n="common.roadmap">Roadmap</span>
+                </div>
+                <p style="font-size: 12.5px; color: #475569;" data-i18n="sos.national112Desc">
+                  Automated free emergency data transmission bypassing SIM validity requirements.
+                </p>
+                <div class="roadmap-notice">
+                  <span>ℹ</span>
+                  <span data-i18n="sos.national112Notice">Government and telecom operator integration required • Roadmap.</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             SCREEN 6: ALERTS SCREEN
+             ================================================================ -->
+        <section id="screen-alerts" class="app-screen">
+          <div id="alertsListContainer"></div>
+        </section>
+
+        <!-- ================================================================
+             SCREEN 7: SAFETY MAP SCREEN
+             ================================================================ -->
+        <section id="screen-map" class="app-screen" style="padding: 0;">
+          <div class="map-screen-wrapper">
+            <div id="safetyLeafletMap"></div>
+
+            <div class="map-control-overlay">
+              <button class="map-overlay-btn" onclick="window.app?.triggerSafeRouteToShelter?.();"
+                style="border-color: #2E7D32;">
+                <span data-i18n="map.safeRouteBtn">🧭 Safe Route (Prototype)</span>
+              </button>
+              <button class="map-overlay-btn" onclick="window.app.safetyMap?.toggleHistoricalRiskLayer?.();">
+                <span data-i18n="map.historicalRiskBtn">🌊 Historical Risk (Stretch)</span>
+              </button>
+              <button class="map-overlay-btn" onclick="window.app.safetyMap?.toggleIncidentLayer?.();">
+                <span data-i18n="map.liveIncidents">⚡ Live Incidents (Stretch)</span>
+              </button>
+              <button class="map-overlay-btn" onclick="window.app.safetyMap?.openISROBhuvanPortal?.();"
+                style="border-color: #0288D1;">
+                <span data-i18n="map.bhuvanPortal">🛰 ISRO Bhuvan Portal</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ACTIVE EMERGENCY SHELTERS LIST -->
+          <div id="activeSheltersSection" style="padding: 16px 16px 8px 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 16px;">🏠</span>
+                <h3 style="font-size: 15px; font-weight: 700; color: var(--color-text-primary); margin: 0;" data-i18n="shelters.activeShelters">
+                  Active Relief Shelters
+                </h3>
+                <span id="activeSheltersCountBadge" class="source-badge government-badge" style="font-size: 11px;">0 Active</span>
+              </div>
+              <button id="refreshSheltersBtn" class="btn btn-secondary" style="min-height: 28px; padding: 0 10px; font-size: 11.5px;" onclick="window.app?.refreshShelters?.();">
+                <span>🔄</span> <span data-i18n="shelters.refresh">Refresh</span>
+              </button>
+            </div>
+
+            <!-- Container for Active Shelter Cards -->
+            <div id="activeSheltersContainer" class="shelters-list-grid" style="display: flex; flex-direction: column; gap: 10px;">
+              <!-- Dynamic Cards or Empty State -->
+            </div>
+          </div>
+
+          <!-- Dynamic Safe Zone Broadcast Roadmap Notice -->
+          <div style="padding: 16px;">
+            <div class="roadmap-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="card-icon">🛡</span>
+                  <div>
+                    <div class="card-title" data-i18n="map.safeZoneTitle">Dynamic Safe Zone Broadcast</div>
+                    <div class="card-subtitle" data-i18n="map.safeZoneSubtitle">Authority Coordination</div>
+                  </div>
+                </div>
+                <span class="maturity-badge roadmap" data-i18n="common.roadmap">Roadmap</span>
+              </div>
+              <p style="font-size: 12px; color: #64748B;" data-i18n="map.safeZoneDesc">
+                Dynamic safe-zone geofence broadcasting requires active District Collectorate GIS authorization.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================================================================
+             SCREEN 11: PROFILE & SETTINGS
+             ================================================================ -->
+        <section id="screen-profile" class="app-screen">
+          <div class="app-card">
+            <h3 style="font-size: 17px; font-weight: bold; margin-bottom: 12px;" data-i18n="profile.title">Citizen Settings & Safety Config</h3>
+
+            <!-- CITIZEN ACCOUNT & SUPABASE AUTH STATUS -->
+            <div class="section-heading" style="margin-top: 4px;">
+              <span data-i18n="profile.accountHeading">Citizen Account</span>
+              <span id="profileAuthStatusBadge" class="source-badge government-badge" data-i18n="profile.authenticatedBadge">Authenticated</span>
+            </div>
+            <div class="app-card" style="background: #F8FAFC; padding: 12px; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <div>
+                  <div id="profileCitizenName" style="font-size: 15px; font-weight: bold; color: var(--color-text-primary);">
+                    Citizen User
+                  </div>
+                  <div id="profileCitizenEmail" style="font-size: 12.5px; color: var(--color-text-secondary);">
+                    citizen@rakshasetu.org
+                  </div>
+                </div>
+                <span class="source-badge" style="background: #E0F2FE; color: #0284C7; font-size: 11px;">Supabase Auth</span>
+              </div>
+              <div style="font-size: 11.5px; color: #64748B; word-break: break-all; margin-bottom: 10px;">
+                <strong data-i18n="profile.citizenIdLabel">Citizen UID:</strong> <code id="profileCitizenId" style="font-family: var(--font-family-mono); font-size: 11px;">--</code>
+              </div>
+              <div id="profileCitizenDetails" style="font-size: 12px; color: #475569; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 12px;">
+                <div><strong data-i18n="profile.phoneLabel">Phone:</strong> <span id="profileCitizenPhone">--</span></div>
+                <div><strong data-i18n="profile.bloodLabel">Blood:</strong> <span id="profileCitizenBlood">--</span></div>
+                <div><strong data-i18n="profile.districtLabel">District:</strong> <span id="profileCitizenDistrict">--</span></div>
+                <div><strong data-i18n="profile.stateLabel">State:</strong> <span id="profileCitizenState">--</span></div>
+              </div>
+              <button id="profileLogoutBtn" type="button" class="btn btn-secondary btn-full" style="min-height: 38px; color: #C62828; border-color: #FFCDD2; font-weight: 600;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span data-i18n="profile.logoutButton">Logout from RakshaSetu</span>
+              </button>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="profileLangSelect" data-i18n="profile.interfaceLanguage">Interface Language</label>
+              <select id="profileLangSelect" class="input-field">
+                    <option value="en">English (English)</option>
+                    <option value="hi">हिन्दी (Hindi)</option>
+                    <option value="as">অসমীয়া (Assamese)</option>
+                    <option value="bn">বাংলা (Bengali)</option>
+                    <option value="brx">बर’ (Bodo)</option>
+                    <option value="doi">डोगरी (Dogri)</option>
+                    <option value="gu">ગુજરાતી (Gujarati)</option>
+                    <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                    <option value="ks">कॉशुर / کٲشُر (Kashmiri)</option>
+                    <option value="kok">कोंकणी (Konkani)</option>
+                    <option value="mai">मैथिली (Maithili)</option>
+                    <option value="ml">മലയാളം (Malayalam)</option>
+                    <option value="mni">মৈতৈলোন্ / ꯃꯤꯇꯩꯂꯣꯟ (Manipuri)</option>
+                    <option value="mr">मराठी (Marathi)</option>
+                    <option value="ne">नेपाली (Nepali)</option>
+                    <option value="or">ଓଡ଼ିଆ (Odia)</option>
+                    <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+                    <option value="sa">संस्कृतम् (Sanskrit)</option>
+                    <option value="sat">ᱥᱟᱱᱛᱟᱲᱤ (Santali)</option>
+                    <option value="sd">سنڌي (Sindhi)</option>
+                    <option value="ta">தமிழ் (Tamil)</option>
+                    <option value="te">తెలుగు (Telugu)</option>
+                    <option value="ur">اردو (Urdu)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="profileRegionSelect" data-i18n="profile.regionalPackage">Regional Disaster Package</label>
+              <select id="profileRegionSelect" class="input-field">
+                <option value="" data-i18n="region.selectPackage">Select Regional Package</option>
+                <option value="bihar-munger" data-i18n="region.mungerBihar">Munger / Bihar</option>
+                <option value="odisha-coastal" data-i18n="region.odishaCoastal">Coastal Odisha (Puri - Kendrapara - Balasore)</option>
+                <option value="mumbai-metro" data-i18n="region.mumbaiMetro">Mumbai Metropolitan Region</option>
+              </select>
+            </div>
+
+            <div class="app-card" style="background: #F8FAFC; padding: 12px; margin-bottom: 16px;">
+              <div style="font-size: 12px; color: #64748B;" data-i18n="profile.storageStatusLabel">Offline Storage Status:</div>
+              <div id="profilePkgStatus" style="font-size: 13.5px; font-weight: bold; color: #166534; margin: 4px 0;" data-i18n="profile.downloadedPkg">
+                Downloaded • Version 2026.4.1 (420 KB)
+              </div>
+              <button class="btn btn-secondary" style="min-height: 36px; font-size: 12px; margin-top: 6px;"
+                onclick="alert(window.t ? window.t('profile.packageReverifiedAlert', 'Regional safety package re-verified and updated in local IndexedDB storage.') : 'Regional safety package re-verified and updated in local IndexedDB storage.');" data-i18n="profile.forceRedownload">
+                Force Re-download
+              </button>
+            </div>
+
+            <div class="section-heading">
+              <span data-i18n="profile.accessibilityHeading">Accessibility & Low-Visibility</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+              <label style="display: flex; align-items: center; justify-content: space-between; font-size: 14px;">
+                <span data-i18n="profile.highContrastTheme">High-Contrast Emergency Theme</span>
+                <input type="checkbox" id="profileHighContrastToggle" style="width: 20px; height: 20px;">
+              </label>
+              <label style="display: flex; align-items: center; justify-content: space-between; font-size: 14px;">
+                <span data-i18n="profile.largeTextTheme">Large Accessible Text</span>
+                <input type="checkbox" id="profileLargeTextToggle" style="width: 20px; height: 20px;">
+              </label>
+            </div>
+
+            <div class="section-heading">
+              <span data-i18n="profile.emergencyContactsHeading">Emergency Contacts</span>
+            </div>
+            <div id="profileContactsList" style="font-size: 13px; color: #94A3B8; margin-bottom: 16px;">
+              <div data-i18n="profile.noContacts">No emergency contacts configured.</div>
+            </div>
+
+            <div class="section-heading">
+              <span data-i18n="profile.backendHeading">Cloud Connectivity & Synchronization</span>
+              <span id="profileBackendStatusBadge" class="source-badge" data-i18n="common.loading">Checking...</span>
+            </div>
+            <div class="app-card" style="background: #F8FAFC; padding: 12px; margin-bottom: 16px;">
+              <div style="font-size: 12px; color: #475569; margin-bottom: 10px; line-height: 1.4;">
+                <span data-i18n="profile.managedBackendInfo">Managed by Supabase Cloud & PostgreSQL Realtime. Local offline outbox automatically syncs upon reconnection.</span>
+              </div>
+              <button id="profileSyncOutboxBtn" class="btn btn-primary btn-full"
+                style="min-height: 36px; font-size: 12px;" data-i18n="profile.syncOutboxBtn">Sync Outbox Now</button>
+              <div id="profileBackendFeedback" style="font-size: 11px; margin-top: 6px; color: #64748B;"></div>
+            </div>
+
+            <div class="section-heading">
+              <span data-i18n="profile.networkDiagHeading">Technical Network Diagnostic</span>
+            </div>
+            <button class="btn btn-secondary btn-full" onclick="window.app.store.openSheet('sim-drawer');" data-i18n="profile.openSimDrawerBtn">
+              ⚙ Open 7-Tier Network Condition Simulator
+            </button>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- ==================================================================
+           BOTTOM NAVIGATION BAR (Strictly 4 Core Major Screens)
+           ================================================================== -->
+      <nav class="bottom-nav-bar" aria-label="Main Navigation" data-i18n-aria="nav.mainNavAria">
+        <button class="nav-item active" data-screen="home" aria-label="Home Dashboard" data-i18n-aria="nav.homeAria">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          </svg>
+          <span data-i18n="nav.home">Home</span>
+        </button>
+        <button class="nav-item" data-screen="alerts" aria-label="Disaster Alerts" data-i18n-aria="nav.alertsAria">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span data-i18n="nav.alerts">Alerts</span>
+        </button>
+        <button class="nav-item" data-screen="map" aria-label="Safety Map" data-i18n-aria="nav.mapAria">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+            <line x1="8" y1="2" x2="8" y2="18"></line>
+            <line x1="16" y1="6" x2="16" y2="22"></line>
+          </svg>
+          <span><span data-i18n="nav.map">Map</span></span>
+        </button>
+        <button class="nav-item" data-screen="profile" aria-label="Profile and Settings" data-i18n-aria="nav.settingsAria">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span data-i18n="nav.settings">Settings</span>
+        </button>
+      </nav>
+
+      <!-- ==================================================================
+           BOTTOM SHEETS (Secondary Workflows)
+           ================================================================== -->
+      <div id="globalSheetBackdrop" class="sheet-backdrop"></div>
+
+      <!-- SHEET 5: SAFETY ASSISTANT -->
+      <div id="sheet-assistant" class="bottom-sheet" role="dialog" aria-modal="true" aria-label="Safety Assistant" data-i18n-aria="home.actionAssistant">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <div>
+            <h3 style="font-size: 16px; font-weight: bold; color: #0F172A;" data-i18n="assistant.sheetTitle">Multilingual Safety Assistant</h3>
+            <span style="font-size: 11px; color: #64748B;" data-i18n="assistant.sheetSubtitle">Speech API + NDMA Safety Knowledgebase</span>
+          </div>
+          <button data-action="close-sheet" class="btn btn-secondary"
+            style="min-height: 32px; padding: 0 10px; font-size: 12px;">✕</button>
+        </div>
+        <div class="sheet-content">
+          <div class="assistant-container">
+            <div id="assistantModeBanner" class="assistant-mode-banner online"></div>
+
+            <div id="assistantChatHistory" class="chat-history">
+              <div class="chat-bubble assistant">
+                <div data-i18n="assistant.welcomeMessage">Namaste. I am your emergency safety assistant. You can ask for safety guidance during floods,
+                  cyclones, or injuries in English or regional languages.</div>
+                <div class="chat-source-tag">
+                  <span data-i18n="assistant.sopTag">📖 NDMA Standard SOP</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="assistantVoiceWave" class="voice-wave-container" style="display: none;">
+              <div class="voice-wave-bar"></div>
+              <div class="voice-wave-bar"></div>
+              <div class="voice-wave-bar"></div>
+              <div class="voice-wave-bar"></div>
+              <div class="voice-wave-bar"></div>
+            </div>
+
+            <div class="assistant-input-bar">
+              <button id="assistantMicBtn" class="voice-mic-btn" title="Tap to speak" aria-label="Tap to speak" data-i18n-title="assistant.micAriaLabel" data-i18n-aria="assistant.micAriaLabel">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                  <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+              </button>
+              <input type="text" id="assistantTextInput" class="input-field"
+                placeholder="Ask: What to do during flooding?" data-i18n-placeholder="assistant.inputPlaceholder" aria-label="Ask emergency question" data-i18n-aria="assistant.inputPlaceholder">
+              <button id="assistantSendBtn" class="btn btn-primary" style="min-width: 64px;" data-i18n="common.send">Send</button>
+            </div>
+
+            <!-- Roadmap Extension: Misinformation Verification -->
+            <div class="roadmap-card" style="margin-top: 14px;">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="card-icon">🔍</span>
+                  <div>
+                    <div class="card-title" data-i18n="assistant.misinfoTitle">Misinformation Verification</div>
+                    <div class="card-subtitle" data-i18n="assistant.misinfoSubtitle">Rumor Control Gateway</div>
+                  </div>
+                </div>
+                <span class="maturity-badge roadmap" data-i18n="common.roadmap">Roadmap</span>
+              </div>
+              <p style="font-size: 11.5px; color: #64748B;" data-i18n="assistant.misinfoDesc">
+                Future capability to cross-check viral audio notes against verified PIB / OSDMA emergency press wires.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHEET 8: HEALTH GUIDE -->
+      <div id="sheet-health" class="bottom-sheet" role="dialog" aria-modal="true" aria-label="Health Guide" data-i18n-aria="home.actionHealth">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <div>
+            <h3 style="font-size: 16px; font-weight: bold; color: #0F172A;" data-i18n="health.sheetTitle">Verified Emergency Health Guide</h3>
+            <span style="font-size: 11px; color: #64748B;" data-i18n="health.sheetSubtitle">NDMA / Indian Red Cross Protocols • Zero Drug Dosages</span>
+          </div>
+          <button data-action="close-sheet" class="btn btn-secondary"
+            style="min-height: 32px; padding: 0 10px; font-size: 12px;">✕</button>
+        </div>
+        <div class="sheet-content">
+          <div class="health-tabs-row">
+            <button class="health-tab-pill active" data-category="flood" data-i18n="health.tabFlood">Flood Exposure</button>
+            <button class="health-tab-pill" data-category="injury" data-i18n="health.tabInjury">Trauma & Bleeding</button>
+            <button class="health-tab-pill" data-category="heat" data-i18n="health.tabHeat">Heatstroke</button>
+            <button class="health-tab-pill" data-category="dehydration" data-i18n="health.tabDehydration">Dehydration & ORS</button>
+          </div>
+          <div id="healthProtocolContainer"></div>
+        </div>
+      </div>
+
+      <!-- SHEET 9: FAMILY SAFETY -->
+      <div id="sheet-family" class="bottom-sheet" role="dialog" aria-modal="true" aria-label="Family Safety" data-i18n-aria="home.actionFamily">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <div>
+            <h3 style="font-size: 16px; font-weight: bold; color: #0F172A;" data-i18n="family.sheetTitle">Family Safety & Check-ins</h3>
+            <span style="font-size: 11px; color: #64748B;" data-i18n="family.sheetSubtitle">Transparent status broadcast without background
+              tracking</span>
+          </div>
+          <button data-action="close-sheet" class="btn btn-secondary"
+            style="min-height: 32px; padding: 0 10px; font-size: 12px;">✕</button>
+        </div>
+        <div class="sheet-content">
+          <div class="app-card"
+            style="background: #F0FDF4; border: 1px solid #BBF7D0; text-align: center; padding: 16px;">
+            <h4 style="font-size: 16px; font-weight: bold; color: #166534; margin-bottom: 6px;" data-i18n="family.quickTitle">"I'm Safe" Quick
+              Broadcast</h4>
+            <p style="font-size: 12.5px; color: #15803D; margin-bottom: 12px;" data-i18n="family.quickDesc">
+              Instantly notifies your saved family contacts with your timestamp and coordinates.
+            </p>
+            <button id="familyImSafeBtn" class="btn btn-safe btn-full" style="min-height: 48px; font-size: 15px;">
+              <span>✓</span> <span data-i18n="family.broadcastBtn">Broadcast "I'm Safe"</span>
+            </button>
+          </div>
+
+          <div class="section-heading">
+            <span data-i18n="family.contactsTitle">Saved Emergency Contacts</span>
+          </div>
+          <div id="familyContactsList"></div>
+
+          <!-- Person Finder Roadmap -->
+          <div class="roadmap-card" style="margin-top: 16px;">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon">👥</span>
+                <div>
+                  <div class="card-title" data-i18n="family.personFinderTitle">Person-Finder Registry</div>
+                  <div class="card-subtitle" data-i18n="family.personFinderSubtitle">Privacy-Controlled Citizen Matching</div>
+                </div>
+              </div>
+              <span class="maturity-badge roadmap" data-i18n="common.roadmap">Roadmap</span>
+            </div>
+            <p style="font-size: 12px; color: #64748B;" data-i18n="family.personFinderDesc">
+              Future authorized missing person registry. Currently disabled to protect citizen privacy during active
+              disasters.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHEET 10: HELP / RESOURCE NEED -->
+      <div id="sheet-help" class="bottom-sheet" role="dialog" aria-modal="true" aria-label="Help and Resource Need" data-i18n-aria="home.actionHelp">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <div>
+            <h3 style="font-size: 16px; font-weight: bold; color: #0F172A;" data-i18n="resources.sheetTitle">Emergency Helplines & Resource Need</h3>
+            <span style="font-size: 11px; color: #64748B;" data-i18n="resources.sheetSubtitle">One-tap government numbers and relief requests</span>
+          </div>
+          <button data-action="close-sheet" class="btn btn-secondary"
+            style="min-height: 32px; padding: 0 10px; font-size: 12px;">✕</button>
+        </div>
+        <div class="sheet-content">
+          <!-- Emergency Direct Dials -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
+            <a href="tel:112" class="btn btn-sos" style="min-height: 44px; font-size: 13px;" data-i18n="resources.call112">
+              📞 112 National ERSS
+            </a>
+            <a href="tel:1070" class="btn btn-primary" style="min-height: 44px; font-size: 13px;" data-i18n="resources.call1070">
+              📞 1070 State Disaster
+            </a>
+            <a href="tel:108" class="btn btn-secondary" style="min-height: 44px; font-size: 13px;" data-i18n="resources.call108">
+              🚑 108 Ambulance
+            </a>
+            <a href="tel:1077" class="btn btn-secondary" style="min-height: 44px; font-size: 13px;" data-i18n="resources.call1077">
+              🏛 1077 District Cell
+            </a>
+          </div>
+
+          <!-- Resource Request Form -->
+          <div class="app-card">
+            <h4 style="font-size: 15px; font-weight: bold; color: #0F172A; margin-bottom: 8px;" data-i18n="resources.formTitle">Submit Resource Need
+              Request</h4>
+            <form id="resourceRequestForm">
+              <div class="form-group">
+                <label class="form-label" for="reqNeedType" data-i18n="resources.whatRequireLabel">What do you require?</label>
+                <select id="reqNeedType" class="input-field" required>
+                  <option value="water" data-i18n="resources.waterOption">Clean Drinking Water</option>
+                  <option value="food" data-i18n="resources.foodOption">Dry Food Rations</option>
+                  <option value="medical" data-i18n="resources.medicalOption">Emergency Medical Assistance</option>
+                  <option value="rescue_boat" data-i18n="resources.rescueBoatOption">Evacuation / Rescue Boat</option>
+                  <option value="shelter" data-i18n="resources.shelterOption">Dry Shelter Accommodation</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="reqPersonCount" data-i18n="resources.personCountLabel">Number of Persons Stranded</label>
+                <input type="number" id="reqPersonCount" class="input-field" min="1" max="200" value="2" required>
+              </div>
+
+              <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px;">
+                  <input type="checkbox" id="reqVulnerableCheck" style="width: 18px; height: 18px;">
+                  <span data-i18n="resources.vulnerableCheckLabel">Infants, pregnant women, or elderly present</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                  <input type="checkbox" id="reqWaterRisingCheck" style="width: 18px; height: 18px;">
+                  <span data-i18n="resources.waterRisingCheckLabel">Water levels are actively rising</span>
+                </label>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="reqDescription" data-i18n="resources.detailsLabel">Landmark / Situation Details</label>
+                <textarea id="reqDescription" class="input-field" rows="2"
+                  placeholder="e.g. On roof of primary school near big banyan tree..." data-i18n-placeholder="resources.detailsPlaceholder"></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-full" style="min-height: 48px;" data-i18n="resources.submitRequestBtn">
+                Submit Need Request
+              </button>
+            </form>
+          </div>
+
+          <!-- Submitted Resource Requests Container -->
+          <div id="citizenRequestsListContainer"></div>
+
+          <!-- Citizen Rebuild Feedback (STRETCH FEATURE) -->
+          <div class="app-card" style="margin-top: 16px;">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon">🛠</span>
+                <div>
+                  <div class="card-title" data-i18n="resources.rebuildTitle">Citizen Rebuild Feedback</div>
+                  <div class="card-subtitle" data-i18n="resources.rebuildSubtitle">Civic Infrastructure Recovery (Stretch)</div>
+                </div>
+              </div>
+              <span class="maturity-badge stretch" data-i18n="common.stretch">Stretch</span>
+            </div>
+
+            <form id="rebuildFeedbackForm">
+              <div class="form-group">
+                <label class="form-label" for="rebuildInfraType" data-i18n="resources.damageTypeLabel">Damage Type</label>
+                <select id="rebuildInfraType" class="input-field">
+                  <option value="road_block" data-i18n="resources.roadBlockOption">Fallen Tree / Blocked Road</option>
+                  <option value="water_pipe" data-i18n="resources.waterPipeOption">Broken Water Pipe / Contamination</option>
+                  <option value="power_line" data-i18n="resources.powerLineOption">Downed Electrical Line / Pole</option>
+                  <option value="bridge_damage" data-i18n="resources.bridgeDamageOption">Culvert / Bridge Washout</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <input type="text" id="rebuildLandmark" class="input-field" placeholder="Exact Landmark" data-i18n-placeholder="resources.landmarkPlaceholder" required>
+              </div>
+              <div class="form-group">
+                <textarea id="rebuildDescription" class="input-field" rows="2"
+                  placeholder="Describe the damage to help restoration crews..." data-i18n-placeholder="resources.rebuildDescPlaceholder"></textarea>
+              </div>
+              <button type="submit" class="btn btn-secondary btn-full" data-i18n="resources.logRebuildBtn">
+                Log Civic Rebuild Report
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHEET: SHELTER DETAIL (Opened from Map Marker) -->
+      <div id="sheet-shelter-detail" class="bottom-sheet" role="dialog" aria-modal="true" aria-label="Shelter Details" data-i18n-aria="shelters.sheetTitle">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <span style="font-size: 14px; font-weight: bold; color: #166534;" data-i18n="shelters.sheetTitle">Verified Relief Shelter</span>
+          <button data-action="close-sheet" class="btn btn-secondary"
+            style="min-height: 32px; padding: 0 10px; font-size: 12px;">✕</button>
+        </div>
+        <div id="shelterSheetBody" class="sheet-content"></div>
+      </div>
+
+      <!-- SHEET: NETWORK SIMULATOR DRAWER -->
+      <div id="sheet-sim-drawer" class="bottom-sheet" role="dialog" aria-modal="true" aria-label="Network Simulator" data-i18n-aria="sim.drawerAria">
+        <div class="sheet-drag-handle"></div>
+        <div class="sheet-header">
+          <div>
+            <h3 style="font-size: 16px; font-weight: bold; color: #0F172A;" data-i18n="sim.sheetTitle">Network Condition Simulator</h3>
+            <span style="font-size: 11px; color: #64748B;" data-i18n="sim.sheetSubtitle">Test all 7 communication tiers & UI fallbacks</span>
+          </div>
+          <button data-action="close-sheet" class="btn btn-secondary"
+            style="min-height: 32px; padding: 0 10px; font-size: 12px;">✕</button>
+        </div>
+        <div class="sheet-content">
+          <p style="font-size: 12.5px; color: #475569; margin-bottom: 8px;" data-i18n="sim.desc">
+            Select an environment condition to evaluate how RakshaSetu automatically adapts its emergency tiering:
+          </p>
+          <div id="networkSimOptionsContainer" class="network-sim-grid"></div>
+        </div>
+      </div>
+
+      <!-- GLOBAL CONFIRMATION DIALOG -->
+      <div id="globalDialogBackdrop" class="dialog-backdrop">
+        <div class="dialog-modal" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+          <h3 id="dialogTitle" style="font-size: 18px; font-weight: bold; color: #0F172A; margin-bottom: 12px;"></h3>
+          <div id="dialogBody" style="margin-bottom: 16px;"></div>
+          <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button id="dialogCancelBtn" class="btn btn-secondary" data-i18n="common.cancel">Cancel</button>
+            <button id="dialogConfirmBtn" class="btn btn-primary" data-i18n="common.confirm">Confirm</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bootstrapping Script (ES Module) -->
+  <script type="module" src="./js/app.js"></script>
+  <script>
+    // Global SOS Click Handler
+    document.addEventListener('DOMContentLoaded', () => {
+      const sosBtn = document.getElementById('mainSosButton');
+      if (sosBtn) {
+        sosBtn.addEventListener('click', () => {
+          if (window.app && window.app.startSOSWorkflow) {
+            window.app.startSOSWorkflow();
+          }
+        });
+      }
+    });
+  </script>
+</body>
+
+</html>

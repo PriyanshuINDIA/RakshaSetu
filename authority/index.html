@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="RakshaSetu Authority - Tactical Emergency Operations Center (EOC) Dashboard for rescue coordination, citizen SOS triage, location resilience, and resource logistics.">
+  <title>RakshaSetu Authority | Emergency Operations Center</title>
+
+  <!-- Google Fonts: Inter & JetBrains Mono for dense EOC typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Leaflet Tactical Geospatial CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <!-- EOC Core Stylesheets -->
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/map.css">
+</head>
+<body>
+  <div class="app-container">
+
+    <!-- ====================================================================
+         1. SIDEBAR NAVIGATION & AUTHORITY IDENTIFIER
+         ==================================================================== -->
+    <aside class="app-sidebar" id="app-sidebar" aria-label="EOC Main Navigation">
+      <div class="sidebar-brand">
+        <div class="brand-wrapper">
+          <div class="brand-logo-icon" aria-hidden="true">🛡️</div>
+          <div class="brand-text">
+            <span class="brand-title">RakshaSetu</span>
+            <span class="brand-sub">Authority EOC</span>
+          </div>
+        </div>
+        <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" title="Toggle Sidebar Collapse" aria-label="Toggle Sidebar">
+          ☰
+        </button>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Operations Console</div>
+
+        <a class="nav-item active" data-tab="dashboard" id="nav-dashboard" role="button">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">Dashboard</span>
+          <span class="nav-badge critical" id="sidebar-critical-badge" style="display: none;">0</span>
+        </a>
+
+        <a class="nav-item" data-tab="incidents" id="nav-incidents" role="button">
+          <span class="nav-icon">🚨</span>
+          <span class="nav-label">SOS &amp; Incidents</span>
+        </a>
+
+        <a class="nav-item" data-tab="map" id="nav-map" role="button">
+          <span class="nav-icon">🗺️</span>
+          <span class="nav-label">Live / Last-Known Map</span>
+        </a>
+
+        <a class="nav-item" data-tab="resources" id="nav-resources" role="button">
+          <span class="nav-icon">📦</span>
+          <span class="nav-label">Resource Needs</span>
+        </a>
+
+        <a class="nav-item" data-tab="shelters" id="nav-shelters" role="button">
+          <span class="nav-icon">⛺</span>
+          <span class="nav-label">Shelters</span>
+        </a>
+
+        <div class="nav-section-title">Intelligence &amp; Governance</div>
+
+        <a class="nav-item" data-tab="reports" id="nav-reports" role="button">
+          <span class="nav-icon">🏛️</span>
+          <span class="nav-label">Gov Data &amp; Reports</span>
+        </a>
+
+        <a class="nav-item" data-tab="settings" id="nav-settings" role="button">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-label">Settings &amp; Roadmap</span>
+        </a>
+      </nav>
+
+      <!-- Sidebar Footer: Authority Credential & Data Health -->
+      <div class="sidebar-footer">
+        <!-- Section 12: Authority Account Verification -->
+        <div class="authority-badge-card" id="authority-identity-card">
+          <div class="auth-header-row">
+            <span class="auth-label">Authority Identity</span>
+            <span class="auth-badge-pill" id="auth-status-pill">AUTHENTICATING</span>
+          </div>
+          <div class="auth-name">
+            <span>🛡️</span>
+            <span id="auth-user-name-text">Checking credentials...</span>
+          </div>
+          <div class="auth-sub-warning" id="auth-user-role-text">
+            Validating Supabase role: <code>profiles.role IN ('authority', 'admin')</code>.
+          </div>
+        </div>
+
+        <!-- Sidebar Mini Pulse -->
+        <div class="sidebar-system-summary">
+          <div class="status-indicator-group">
+            <span class="status-pulse-dot" id="sidebar-status-dot"></span>
+            <span class="status-summary-text">EOC Telemetry Online</span>
+          </div>
+          <span style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">v2.4-EOC</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ====================================================================
+         2. MAIN WORKSPACE AREA
+         ==================================================================== -->
+    <main class="main-wrapper">
+
+      <!-- Top Header Bar -->
+      <header class="ops-header">
+        <div class="header-left">
+          <div class="eoc-location-selector">
+            <span class="eoc-tag">SECTOR EOC</span>
+            <span>Munger District Command &bull; Munger, Bihar</span>
+          </div>
+        </div>
+
+        <!-- Built-in 11-Step Guided Demo Flow Controller -->
+        <div class="header-center">
+          <div class="demo-controller-bar" id="demo-controller">
+            <!-- Dynamically populated by demoFlow.js -->
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Quick SOS Injection Trigger -->
+          <button class="action-btn-primary" style="background: var(--color-critical); padding: 6px 12px; font-size: 12px;" onclick="window.__rakshaState.simulateNewCitizenSOS()">
+            + Ingest Citizen SOS
+          </button>
+
+          <!-- Notification Bell -->
+          <button class="header-tool-btn" id="header-notif-btn" title="Operations Notifications" aria-label="Notifications">
+            🔔
+            <span class="header-badge-count" id="header-notif-count">2</span>
+          </button>
+
+          <!-- Notification Dropdown Panel -->
+          <div class="notification-dropdown" id="notification-dropdown">
+            <!-- Dynamically rendered by notifications.js -->
+          </div>
+
+          <!-- Theme Toggle Button -->
+          <button class="header-tool-btn" id="theme-toggle-btn" title="Toggle High-Glare Light / EOC Dark Mode" onclick="document.documentElement.dataset.theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'">
+            🌓
+          </button>
+        </div>
+      </header>
+
+      <!-- Content Area: Tab Views -->
+      <div class="content-area">
+
+        <!-- ================================================================
+             TAB 1: DASHBOARD (KPI Strip + Tactical Map + Right Queue)
+             ================================================================ -->
+        <div class="tab-view active" id="tab-dashboard">
+          <div class="dashboard-layout">
+
+            <!-- Top KPI Strip (7 Cards) -->
+            <section class="kpi-strip" aria-label="Key Operational Indicators">
+              <div class="kpi-card critical" onclick="window.__rakshaState.setActiveTab('incidents')">
+                <div class="kpi-header">
+                  <span class="kpi-title">Critical SOS</span>
+                  <span class="kpi-icon">🚨</span>
+                </div>
+                <div class="kpi-value-row">
+                  <span class="kpi-value" id="kpi-val-critical">0</span>
+                  <span class="kpi-subtext">Immediate Threat</span>
+                </div>
+              </div>
+
+              <div class="kpi-card high" onclick="window.__rakshaState.setActiveTab('incidents')">
+                <div class="kpi-header">
+                  <span class="kpi-title">High Priority</span>
+                  <span class="kpi-icon">⚡</span>
+                </div>
+                <div class="kpi-value-row">
+                  <span class="kpi-value" id="kpi-val-high">0</span>
+                  <span class="kpi-subtext">Urgent Response</span>
+                </div>
+              </div>
+
+              <div class="kpi-card moderate" onclick="window.__rakshaState.setActiveTab('incidents')">
+                <div class="kpi-header">
+                  <span class="kpi-title">Moderate</span>
+                  <span class="kpi-icon">⚠️</span>
+                </div>
+                <div class="kpi-value-row">
+                  <span class="kpi-value" id="kpi-val-moderate">0</span>
+                  <span class="kpi-subtext">Stable Isolation</span>
+                </div>
+              </div>
+
+              <div class="kpi-card resolved" onclick="window.__rakshaState.setActiveTab('incidents')">
+                <div class="kpi-header">
+                  <span class="kpi-title">Resolved</span>
+                  <span class="kpi-icon">✅</span>
+                </div>
+                <div class="kpi-value-row">
+                  <span class="kpi-value" id="kpi-val-resolved">0</span>
+                  <span class="kpi-subtext">Evacuated / Safe</span>
+                </div>
+              </div>
+
+              <div class="kpi-card signals" onclick="window.__rakshaState.setActiveTab('map')">
+                <div class="kpi-header">
+                  <span class="kpi-title">Location Signals</span>
+                  <span class="kpi-icon">📡</span>
+                </div>
+                <div class="kpi-value-row">
+                  <span class="kpi-value" id="kpi-val-signals">0</span>
+                  <span class="kpi-subtext">Active Heartbeats</span>
+                </div>
+              </div>
+
+              <div class="kpi-card shelters" onclick="window.__rakshaState.setActiveTab('shelters')">
+                <div class="kpi-header">
+                  <span class="kpi-title">Active Shelters</span>
+                  <span class="kpi-icon">⛺</span>
+                </div>
+                <div class="kpi-value-row">
+                  <span class="kpi-value" id="kpi-val-shelters">0</span>
+                  <span class="kpi-subtext" id="kpi-subtext-shelters">0 Total Evacuees</span>
+                </div>
+              </div>
+
+              <div class="kpi-card resources" onclick="window.__rakshaState.setActiveTab('resources')">
+                <div class="kpi-header">
+                  <span class="kpi-title">Pending Supplies</span>
+                  <span class="kpi-icon">📦</span>
+                </div>
+                <div class="kpi-value-row">
+                  <span class="kpi-value" id="kpi-val-resources">0</span>
+                  <span class="kpi-subtext">Water / Medical / Food</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Split Work Area: Large Incident Map + Incident Queue -->
+            <div class="ops-split-area">
+
+              <!-- Left Map Pane -->
+              <div class="ops-map-pane">
+                <div class="map-container">
+                  <div id="eoc-main-map"></div>
+
+                  <!-- Floating Tactical Map Filters -->
+                  <div class="map-filter-bar">
+                    <button class="map-filter-btn active" data-map-filter="ALL">All Layers</button>
+                    <button class="map-filter-btn critical" data-map-filter="CRITICAL">🚨 Critical SOS</button>
+                    <button class="map-filter-btn" data-map-filter="SOS">📍 All SOS</button>
+                    <button class="map-filter-btn" data-map-filter="LAST_KNOWN">⏱️ Last Known</button>
+                    <button class="map-filter-btn" data-map-filter="RESOURCES">📦 Resources</button>
+                    <button class="map-filter-btn" data-map-filter="SHELTERS">⛺ Shelters</button>
+                    <button class="map-filter-btn" data-map-filter="UNSAFE">⛔ Unsafe Roads</button>
+                  </div>
+
+                  <!-- Bottom-Left Legend with Strict Live vs Last-Known Distinction -->
+                  <div class="map-legend-box">
+                    <div class="legend-title">Geospatial Data Reliability</div>
+                    <div class="legend-items-list">
+                      <div class="legend-item">
+                        <span class="legend-swatch live"></span>
+                        <span><strong>LIVE LOCATION:</strong> Recent verified GPS fix</span>
+                      </div>
+                      <div class="legend-item">
+                        <span class="legend-swatch last-known"></span>
+                        <span><strong>LAST-KNOWN LOCATION:</strong> Not guaranteed current</span>
+                      </div>
+                      <div class="legend-item">
+                        <span class="legend-swatch resource"></span>
+                        <span><strong>RESOURCE NEED:</strong> Logistics dispatch point</span>
+                      </div>
+                      <div class="legend-item">
+                        <span class="legend-swatch shelter"></span>
+                        <span><strong>RELIEF SHELTER:</strong> Evacuee intake center</span>
+                      </div>
+                      <div class="legend-item">
+                        <span class="legend-swatch hazard"></span>
+                        <span><strong>UNSAFE ROAD:</strong> Debris / River washout</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right-Side Incident Queue Pane -->
+              <div class="ops-queue-pane">
+                <div class="queue-header">
+                  <div class="queue-title-row">
+                    <span class="queue-title">
+                      <span>⚡</span>
+                      <span>Active Incident Queue</span>
+                    </span>
+                    <span style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">SORT: SEVERITY</span>
+                  </div>
+
+                  <div class="queue-filter-pills">
+                    <button class="queue-pill active" data-filter="ALL">All</button>
+                    <button class="queue-pill critical" data-filter="CRITICAL">Critical</button>
+                    <button class="queue-pill" data-filter="HIGH">High</button>
+                    <button class="queue-pill" data-filter="MODERATE">Moderate</button>
+                    <button class="queue-pill" data-filter="UNASSIGNED">Unassigned</button>
+                  </div>
+                </div>
+
+                <div class="queue-list" id="ops-queue-list">
+                  <!-- Dynamically rendered by app.js -->
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================================================
+             TAB 2: SOS & INCIDENTS (Full Master Triage Table)
+             ================================================================ -->
+        <div class="tab-view" id="tab-incidents">
+          <div class="table-view-container">
+            <div class="table-toolbar">
+              <div class="toolbar-left">
+                <div class="search-box-wrapper">
+                  <span class="search-icon-pos">🔍</span>
+                  <input type="text" class="search-input" id="incident-search-input" placeholder="Search ID, citizen, landmark, phone...">
+                </div>
+
+                <select class="filter-select" id="incident-priority-filter">
+                  <option value="ALL">All Priorities</option>
+                  <option value="CRITICAL">Critical SOS</option>
+                  <option value="HIGH">High Priority</option>
+                  <option value="MODERATE">Moderate</option>
+                </select>
+
+                <select class="filter-select" id="incident-status-filter">
+                  <option value="ALL">All Statuses</option>
+                  <option value="Unassigned">Unassigned</option>
+                  <option value="Assigned">Assigned</option>
+                  <option value="Responding">Responding</option>
+                  <option value="Reached">Reached</option>
+                  <option value="Resolved">Resolved</option>
+                </select>
+              </div>
+
+              <div class="toolbar-right">
+                <button class="action-btn-secondary" onclick="window.__rakshaMap && window.__rakshaState.setActiveTab('map')">
+                  🗺️ View On Map
+                </button>
+                <button class="action-btn-primary" onclick="window.__rakshaState.simulateNewCitizenSOS()">
+                  + Ingest Incident
+                </button>
+              </div>
+            </div>
+
+            <div class="table-responsive-wrapper">
+              <table class="ops-data-table">
+                <thead>
+                  <tr>
+                    <th>Incident ID</th>
+                    <th>Priority</th>
+                    <th>Reported Location</th>
+                    <th>Received</th>
+                    <th>Position Type</th>
+                    <th>Accuracy</th>
+                    <th>Heartbeat</th>
+                    <th>Network</th>
+                    <th>Medical</th>
+                    <th>Assigned Team</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="incident-table-body">
+                  <!-- Dynamically rendered by app.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================================================
+             TAB 3: FULL LIVE / LAST-KNOWN MAP
+             ================================================================ -->
+        <div class="tab-view" id="tab-map">
+          <div class="map-container" style="width: 100%; height: 100%;">
+            <div id="eoc-full-map"></div>
+
+            <!-- Floating Filter Bar -->
+            <div class="map-filter-bar">
+              <button class="map-filter-btn active" data-map-filter="ALL">All Layers</button>
+              <button class="map-filter-btn critical" data-map-filter="CRITICAL">🚨 Critical SOS</button>
+              <button class="map-filter-btn" data-map-filter="SOS">📍 SOS Signals</button>
+              <button class="map-filter-btn" data-map-filter="LAST_KNOWN">⏱️ Last Known Positions</button>
+              <button class="map-filter-btn" data-map-filter="RESOURCES">📦 Resource Drops</button>
+              <button class="map-filter-btn" data-map-filter="SHELTERS">⛺ Relief Camps</button>
+              <button class="map-filter-btn" data-map-filter="UNSAFE">⛔ Hazard Zones</button>
+            </div>
+
+            <div class="map-layer-control">
+              <div class="map-layer-title">Tactical Cartography</div>
+              <label class="layer-toggle-row">
+                <input type="checkbox" checked disabled> High-Contrast Dark Matter
+              </label>
+              <label class="layer-toggle-row">
+                <input type="checkbox" checked disabled> Accuracy GPS Radii
+              </label>
+              <label class="layer-toggle-row">
+                <input type="checkbox" disabled> Stretch: Live Extrapolation
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================================================
+             TAB 4: RESOURCE NEEDS (Coordination Screen)
+             ================================================================ -->
+        <div class="tab-view" id="tab-resources">
+          <div class="table-view-container">
+
+            <!-- Resource KPI Strip -->
+            <section class="kpi-strip" style="grid-template-columns: repeat(4, 1fr); padding: 12px 20px;">
+              <div class="kpi-card resources">
+                <div class="kpi-header"><span class="kpi-title">Pending Requests</span><span>📦</span></div>
+                <div class="kpi-value-row"><span class="kpi-value" id="res-kpi-pending">0</span><span class="kpi-subtext">Awaiting Dispatch</span></div>
+              </div>
+              <div class="kpi-card critical">
+                <div class="kpi-header"><span class="kpi-title">High Urgency Needs</span><span>⚡</span></div>
+                <div class="kpi-value-row"><span class="kpi-value" id="res-kpi-high">0</span><span class="kpi-subtext">Water / Medical</span></div>
+              </div>
+              <div class="kpi-card signals">
+                <div class="kpi-header"><span class="kpi-title">Assigned / In Transit</span><span>🚚</span></div>
+                <div class="kpi-value-row"><span class="kpi-value" id="res-kpi-assigned">0</span><span class="kpi-subtext">Convoys Active</span></div>
+              </div>
+              <div class="kpi-card resolved">
+                <div class="kpi-header"><span class="kpi-title">Fulfilled Today</span><span>✅</span></div>
+                <div class="kpi-value-row"><span class="kpi-value" id="res-kpi-fulfilled">0</span><span class="kpi-subtext">Delivered to Camp</span></div>
+              </div>
+            </section>
+
+            <!-- Stretch Explanation Bar -->
+            <div style="padding: 8px 20px; background: rgba(168, 85, 247, 0.1); border-bottom: 1px solid rgba(168, 85, 247, 0.3); font-size: 12px; color: #d8b4fe; display: flex; align-items: center; justify-content: space-between;">
+              <span>
+                <strong>Stretch: Nearest-Need-First Prioritization</strong> &bull; Prioritization based on need, urgency and location. No opaque AI optimization.
+              </span>
+              <span class="stretch-badge">STRETCH CAPABILITY</span>
+            </div>
+
+            <!-- Resource Request Table -->
+            <div class="table-responsive-wrapper">
+              <table class="ops-data-table">
+                <thead>
+                  <tr>
+                    <th>Request ID</th>
+                    <th>Requested Need</th>
+                    <th>Delivery Location</th>
+                    <th>Priority</th>
+                    <th>Logged Time</th>
+                    <th>Workflow Status</th>
+                    <th>Assigned Carrier</th>
+                  </tr>
+                </thead>
+                <tbody id="resource-table-body">
+                  <!-- Dynamically rendered by app.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================================================
+             TAB 5: SHELTERS (Relief Camp Overview)
+             ================================================================ -->
+        <div class="tab-view" id="tab-shelters">
+          <div class="table-view-container">
+            <div class="table-toolbar">
+              <div class="toolbar-left">
+                <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">
+                  Designated District Relief Shelters
+                </span>
+                <span style="font-size: 12px; color: var(--text-muted);">&bull; Real-time intake &amp; service monitoring</span>
+              </div>
+              <div class="toolbar-right" style="display: flex; gap: 8px;">
+                <button class="action-btn-secondary" onclick="window.__rakshaState.setActiveTab('map')">
+                  🗺️ Map All Shelters
+                </button>
+                <button class="action-btn-primary" id="btn-designate-shelter" onclick="window.__rakshaModal.openDesignateShelterModal()">
+                  ➕ Designate Shelter
+                </button>
+              </div>
+            </div>
+
+            <div style="padding: 20px; overflow-y: auto;">
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;" id="shelter-cards-grid">
+                <!-- Dynamically rendered by app.js -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================================================
+             TAB 6: GOV DATA & REPORTS (Sections 9 & 13)
+             ================================================================ -->
+        <div class="tab-view" id="tab-reports">
+          <div class="table-view-container" style="overflow-y: auto;">
+            <div class="table-toolbar">
+              <div class="toolbar-left">
+                <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">
+                  Official Government Feeds &amp; Operational Analytics
+                </span>
+              </div>
+            </div>
+
+            <!-- Section 9: Government Data Cards -->
+            <div class="gov-source-grid" id="gov-sources-container">
+              <!-- Dynamically populated from govSources.js -->
+            </div>
+
+            <!-- Section 13: Compact Operational Reports -->
+            <div style="padding: 0 20px 20px 20px;">
+              <div style="font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 12px;">
+                Operations Performance &amp; Signal Health Reports
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                <div class="kpi-card" style="padding: 16px;">
+                  <div class="kpi-title">Average SOS Response Time</div>
+                  <div class="kpi-value" style="color: var(--color-resolved); margin: 8px 0;">11.4 min</div>
+                  <div class="kpi-subtext">From initial PDU beacon to team on-scene arrival.</div>
+                </div>
+
+                <div class="kpi-card" style="padding: 16px;">
+                  <div class="kpi-title">Location Signal Degradation Rate</div>
+                  <div class="kpi-value" style="color: #fbbf24; margin: 8px 0;">34.8%</div>
+                  <div class="kpi-subtext">Citizen handsets shifting from cellular 4G to SMS fallback.</div>
+                </div>
+
+                <div class="kpi-card" style="padding: 16px; border-left: 3px solid #c084fc;">
+                  <div style="display: flex; justify-content: space-between;">
+                    <span class="kpi-title">Historical Geological Risk</span>
+                    <span class="stretch-badge">STRETCH</span>
+                  </div>
+                  <div class="kpi-value" style="color: #c084fc; margin: 8px 0;">Tier 4 (Critical)</div>
+                  <div class="kpi-subtext">Secondary report based on 2019-2024 slope stability models.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================================================================
+             TAB 7: SETTINGS, CREDENTIALS & ROADMAP (Sections 10, 11, 12)
+             ================================================================ -->
+        <div class="tab-view" id="tab-settings">
+          <div class="table-view-container" style="overflow-y: auto; padding: 20px;">
+
+            <!-- Section 12: Authority Account Verification -->
+            <div style="max-width: 800px; margin-bottom: 24px;">
+              <h2 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">
+                Authority Identity &amp; Cryptographic Verification
+              </h2>
+              <div class="authority-badge-card" style="padding: 16px; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-size: 14px; font-weight: 700; color: var(--text-primary);">
+                    Current Credential: Demo Authority Credential
+                  </span>
+                  <span class="auth-badge-pill">ACTIVE OPERATIONAL SANDBOX</span>
+                </div>
+                <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+                  The authority console is operating with provisioned district testing keys. In strict accordance with government security protocol, <strong>RakshaSetu does NOT generate fake DigiLocker or Aadhaar verification badges.</strong>
+                </div>
+                <div style="padding: 8px 12px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-sm); font-size: 12px; color: #93c5fd;">
+                  <strong>Roadmap Requirement:</strong> Official national launch requires direct integration with Government of India DigiLocker / Aadhaar XML API and District Magistrate authorization tokens.
+                </div>
+              </div>
+            </div>
+
+            <!-- Resilient Local Offline Mode Simulation (Section 8) -->
+            <div style="max-width: 800px; margin-bottom: 24px;">
+              <h2 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">
+                Resilient Offline Capabilities &amp; Connectivity State
+              </h2>
+              <div class="incident-card" style="padding: 16px; gap: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="font-weight: 700; color: var(--text-primary);">Backend Cloud Connection</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Toggle to test behavior when cloud connection drops.</div>
+                  </div>
+                  <button class="action-btn-secondary" id="toggle-backend-btn">
+                    Simulate Connection Interruption
+                  </button>
+                </div>
+                <div style="font-size: 12px; color: var(--text-secondary);">
+                  <strong>Capabilities continuing offline via local cache:</strong>
+                  <ul style="margin: 6px 0 0 18px; line-height: 1.6;">
+                    <li>Cached last-known citizen coordinates and accuracy radii</li>
+                    <li>Local incident triage and team assignment queuing</li>
+                    <li>Tactical vector map base layer with offline tile cache</li>
+                    <li>Shelter roster and resource stock accounting</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 10: Stretch Features Architecture -->
+            <div style="max-width: 800px; margin-bottom: 24px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <h2 style="font-size: 16px; font-weight: 700; color: var(--text-primary);">
+                  Section 10: Stretch Capabilities
+                </h2>
+                <span class="stretch-badge">STRETCH ARCHITECTURE</span>
+              </div>
+              <div class="roadmap-feature-grid" id="stretch-features-list" style="padding: 0;">
+                <!-- Populated dynamically from roadmapData.js -->
+              </div>
+            </div>
+
+            <!-- Section 11: Dedicated Roadmap Panel (8 Items) -->
+            <div style="max-width: 800px; margin-bottom: 24px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <h2 style="font-size: 16px; font-weight: 700; color: var(--text-primary);">
+                  Section 11: Roadmap &amp; Future Integrations
+                </h2>
+                <span class="roadmap-badge">OFFICIAL ROADMAP</span>
+              </div>
+              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+                These capabilities require external state infrastructure, bilateral carrier protocols, or national emergency network integration. They are explicitly not simulated as live features.
+              </p>
+              <div class="roadmap-feature-grid" id="roadmap-features-list" style="padding: 0;">
+                <!-- Populated dynamically from roadmapData.js -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ====================================================================
+           8. GLOBAL SYSTEM STATUS BAR (Fixed Bottom)
+           ==================================================================== -->
+      <footer class="global-statusbar" role="contentinfo" aria-label="System Freshness and Network Health">
+        <div class="statusbar-left">
+          <div class="statusbar-item">
+            <span class="status-pulse-dot" id="footer-status-pulse"></span>
+            <span>Backend: <strong id="footer-backend-text">Connected</strong></span>
+          </div>
+
+          <div class="statusbar-divider"></div>
+
+          <div class="statusbar-item">
+            <span>Government Data: <strong id="footer-freshness-text">08:15 IST (Fresh)</strong></span>
+          </div>
+
+          <div class="statusbar-divider"></div>
+
+          <div class="statusbar-item">
+            <span>Offline Sync: <strong id="footer-sync-text">0 Pending</strong></span>
+          </div>
+        </div>
+
+        <div class="statusbar-right">
+          <div class="statusbar-item">
+            <span>Citizen SOS Stream: <strong id="footer-stream-status" style="color: #fbbf24;">Connecting</strong></span>
+          </div>
+
+          <div class="statusbar-divider"></div>
+
+          <div class="statusbar-item">
+            <span>Tile Source: <strong style="color: var(--text-secondary);">OpenStreetMap / Standard Cache</strong></span>
+          </div>
+
+          <div class="statusbar-divider"></div>
+
+          <div class="statusbar-item">
+            <span style="font-family: var(--font-mono); color: var(--text-muted);">EOC-SEC-KL-11</span>
+          </div>
+        </div>
+      </footer>
+
+    </main>
+
+    <!-- ====================================================================
+         SLIDE-OVER INSPECTION DRAWER (Section 2, 4, 5, 6)
+         ==================================================================== -->
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+    <aside class="ops-drawer" id="ops-drawer" role="dialog" aria-modal="true" aria-label="Incident Inspection Drawer">
+      <!-- Dynamically rendered by drawer.js -->
+    </aside>
+
+    <!-- ====================================================================
+         TEAM ASSIGNMENT MODAL (Section 7)
+         ==================================================================== -->
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal-dialog" id="modal-dialog" role="dialog" aria-modal="true" aria-label="Team Assignment Dialog">
+        <!-- Dynamically rendered by modal.js -->
+      </div>
+    </div>
+
+    <!-- ====================================================================
+         AUTHORITY EOC AUTHENTICATION OVERLAY
+         ==================================================================== -->
+    <div class="modal-overlay" id="authority-auth-overlay" style="z-index: 10000; background: rgba(5, 7, 10, 0.88); backdrop-filter: blur(8px); display: none;">
+      <div class="modal-dialog" style="max-width: 440px; border-color: rgba(59, 130, 246, 0.35); box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+        <div style="padding: 20px 24px; background: var(--bg-surface-elevated); border-bottom: 1px solid var(--border-medium); display: flex; align-items: center; gap: 12px;">
+          <div style="font-size: 26px; width: 44px; height: 44px; border-radius: 8px; background: rgba(59, 130, 246, 0.15); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(59, 130, 246, 0.3);">🛡️</div>
+          <div>
+            <div style="font-size: 16px; font-weight: 800; color: var(--text-primary); letter-spacing: 0.5px;">EOC Authority Access</div>
+            <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">SUPABASE RBAC VERIFICATION</div>
+          </div>
+        </div>
+        
+        <form id="authority-auth-form" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+            District Emergency Operations Center console requires authenticated credentials with <code>profiles.role = 'authority'</code> or <code>'admin'</code>.
+          </div>
+
+          <div id="authority-auth-alert" style="display: none; padding: 10px 12px; border-radius: var(--radius-sm); font-size: 12px; line-height: 1.4;"></div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label for="auth-email-input" style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Authority Email</label>
+            <input type="email" id="auth-email-input" required autocomplete="email" placeholder="authority@rakshasetu.gov.in" style="padding: 10px 12px; background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 13px; font-family: var(--font-mono); outline: none;">
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <label for="auth-password-input" style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Password</label>
+            <input type="password" id="auth-password-input" required autocomplete="current-password" placeholder="••••••••••••" style="padding: 10px 12px; background: var(--bg-surface); border: 1px solid var(--border-medium); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 13px; font-family: var(--font-mono); outline: none;">
+          </div>
+
+          <button type="submit" id="auth-submit-btn" style="padding: 12px; background: var(--brand-primary); color: white; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: opacity 0.2s;">
+            <span>Authenticate EOC Access</span>
+            <span>&rarr;</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER (Section 14) -->
+    <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  </div>
+
+  <!-- Leaflet Tactical Geospatial JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Application Modules -->
+  <script type="module" src="src/app.js?v=sih2026_v3"></script>
+</body>
+</html>

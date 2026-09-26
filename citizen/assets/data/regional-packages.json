@@ -1,0 +1,306 @@
+{
+  "packages": [
+    {
+      "id": "odisha-coastal",
+      "name": "Coastal Odisha (Puri - Kendrapara - Balasore)",
+      "version": "2026.4.1",
+      "releaseDate": "2026-08-28T06:00:00Z",
+      "sizeKb": 420,
+      "riskTypes": ["Cyclone", "Storm Surge", "Mahanadi Basin Riverine Flood"],
+      "centerCoordinates": { "lat": 19.8135, "lng": 85.8312 },
+      "officialHelplines": [
+        { "name": "National Emergency Service", "number": "112", "tollFree": true },
+        { "name": "State Disaster Management (OSDMA)", "number": "1070", "tollFree": true },
+        { "name": "Puri District Emergency Cell", "number": "1077", "tollFree": true },
+        { "name": "NDRF Control Room (Odisha)", "number": "0674-2572112", "tollFree": false },
+        { "name": "Emergency Medical Ambulance", "number": "108", "tollFree": true }
+      ],
+      "shelters": [
+        {
+          "id": "sh-od-01",
+          "name": "Cyclone Relief Shelter - Astaranga Ward 4",
+          "lat": 19.8250,
+          "lng": 85.8450,
+          "capacityTotal": 1200,
+          "capacityCurrent": 480,
+          "waterAvailable": true,
+          "powerBackup": "Solar + Diesel Generator",
+          "medicalPost": true,
+          "address": "Near Government High School, Astaranga Coastal Belt, Puri",
+          "contact": "+91 94370 12345",
+          "structuralIntegrity": "Reinforced Concrete • Cyclone Category 5 Tested",
+          "elevationMeters": 9.2
+        },
+        {
+          "id": "sh-od-02",
+          "name": "Multi-Purpose Cyclone Shelter - Konark Sea Road",
+          "lat": 19.8876,
+          "lng": 86.0945,
+          "capacityTotal": 1500,
+          "capacityCurrent": 710,
+          "waterAvailable": true,
+          "powerBackup": "Solar Inverter Grid",
+          "medicalPost": true,
+          "address": "Marine Drive Sector 2, Konark, Puri District",
+          "contact": "+91 94370 67890",
+          "structuralIntegrity": "NDMA Standard Elevated Stilt Shelter",
+          "elevationMeters": 11.5
+        },
+        {
+          "id": "sh-od-03",
+          "name": "District Red Cross Relief Center - Puri Sadar",
+          "lat": 19.8052,
+          "lng": 85.8201,
+          "capacityTotal": 900,
+          "capacityCurrent": 320,
+          "waterAvailable": true,
+          "powerBackup": "Generator Supported",
+          "medicalPost": true,
+          "address": "Red Cross Bhavan, VIP Road, Puri Urban",
+          "contact": "+91 94371 33445",
+          "structuralIntegrity": "Two-storey Flood Resistant Facility",
+          "elevationMeters": 8.0
+        },
+        {
+          "id": "sh-od-04",
+          "name": "Brahmagiri Elevated Primary School Camp",
+          "lat": 19.7890,
+          "lng": 85.7350,
+          "capacityTotal": 650,
+          "capacityCurrent": 180,
+          "waterAvailable": true,
+          "powerBackup": "Solar Battery",
+          "medicalPost": false,
+          "address": "Brahmagiri Market Junction, Puri",
+          "contact": "+91 94372 99881",
+          "structuralIntegrity": "Elevated Community Hall",
+          "elevationMeters": 14.1
+        }
+      ],
+      "hospitals": [
+        {
+          "id": "hosp-od-01",
+          "name": "District Headquarters Hospital (DHH) Puri",
+          "lat": 19.8155,
+          "lng": 85.8285,
+          "icuBedsAvailable": 14,
+          "emergencyTraumaUnit": true,
+          "phone": "06752-222045",
+          "address": "Hospital Square, Grand Road, Puri"
+        },
+        {
+          "id": "hosp-od-02",
+          "name": "Community Health Centre (CHC) Brahmagiri",
+          "lat": 19.7920,
+          "lng": 85.7390,
+          "icuBedsAvailable": 3,
+          "emergencyTraumaUnit": false,
+          "phone": "06752-234120",
+          "address": "Main Road, Brahmagiri, Puri"
+        }
+      ],
+      "damRiskProfiles": [
+        {
+          "damName": "Hirakud Dam (Mahanadi Basin)",
+          "source": "Central Water Commission (CWC) / India-WRIS",
+          "lastRecordedTimestamp": "2026-09-03T18:00:00Z",
+          "fullReservoirLevel": "630.00 ft",
+          "currentLevel": "624.50 ft",
+          "storagePercentage": 86.4,
+          "inflowCusecs": "142,000 cusecs",
+          "outflowCusecs": "120,500 cusecs (14 Gates Open)",
+          "downstreamWarningStatus": "Yellow Watch — Moderate discharge to Mundali Weir",
+          "historicalContext": "During 2019 monsoon peak, 28 sluice gates were opened. Current outflow is within safe dyke tolerances.",
+          "disclaimer": "Recorded from last official CWC bulletin. Live telemetry requires authority link."
+        }
+      ]
+    },
+    {
+      "id": "mumbai-metro",
+      "name": "Mumbai Metropolitan Region (MMR)",
+      "version": "2026.4.1",
+      "releaseDate": "2026-08-25T08:00:00Z",
+      "sizeKb": 395,
+      "riskTypes": ["Urban Flash Flood", "High Tide Inundation", "Landslide (Slopes)"],
+      "centerCoordinates": { "lat": 19.0760, "lng": 72.8777 },
+      "officialHelplines": [
+        { "name": "National Emergency Service", "number": "112", "tollFree": true },
+        { "name": "BMC Disaster Control Room", "number": "1916", "tollFree": true },
+        { "name": "Mumbai Police Control", "number": "100", "tollFree": true },
+        { "name": "Emergency Medical Ambulance", "number": "108", "tollFree": true }
+      ],
+      "shelters": [
+        {
+          "id": "sh-mb-01",
+          "name": "Dadar Swatantryaveer Savarkar Relief Hall",
+          "lat": 19.0222,
+          "lng": 72.8390,
+          "capacityTotal": 1000,
+          "capacityCurrent": 220,
+          "waterAvailable": true,
+          "powerBackup": "Dual Generator",
+          "medicalPost": true,
+          "address": "Shivaji Park Seaface, Dadar West, Mumbai",
+          "contact": "+91 98200 11223",
+          "structuralIntegrity": "Elevated Community Auditorium",
+          "elevationMeters": 7.5
+        },
+        {
+          "id": "sh-mb-02",
+          "name": "Kurla Municipal School Emergency Camp",
+          "lat": 19.0680,
+          "lng": 72.8790,
+          "capacityTotal": 800,
+          "capacityCurrent": 410,
+          "waterAvailable": true,
+          "powerBackup": "Inverter Backup",
+          "medicalPost": true,
+          "address": "Near Station Road, Kurla West (Elevated 1st & 2nd Floor)",
+          "contact": "+91 98200 44556",
+          "structuralIntegrity": "3-Storey Concrete School Building",
+          "elevationMeters": 6.8
+        }
+      ],
+      "hospitals": [
+        {
+          "id": "hosp-mb-01",
+          "name": "KEM Hospital & Medical College",
+          "lat": 19.0034,
+          "lng": 72.8423,
+          "icuBedsAvailable": 28,
+          "emergencyTraumaUnit": true,
+          "phone": "022-24107000",
+          "address": "Acharya Donde Marg, Parel, Mumbai"
+        }
+      ],
+      "damRiskProfiles": [
+        {
+          "damName": "Bhatsa & Tansa Catchment",
+          "source": "Brihanmumbai Municipal Corporation (BMC) Water Supply",
+          "lastRecordedTimestamp": "2026-09-02T12:00:00Z",
+          "fullReservoirLevel": "142.07 m",
+          "currentLevel": "139.80 m",
+          "storagePercentage": 91.2,
+          "inflowCusecs": "Controlled",
+          "outflowCusecs": "Spillway overflow steady",
+          "downstreamWarningStatus": "Green Normal — Standard monsoon replenishment",
+          "historicalContext": "Full overflow reached annually in late August/early September.",
+          "disclaimer": "Cached telemetry from BMC engineering bulletin."
+        }
+      ]
+    },
+    {
+      "id": "bihar-munger",
+      "name": "Munger / Bihar",
+      "state": "Bihar",
+      "district": "Munger",
+      "version": "2026.4.1",
+      "releaseDate": "2026-09-01T00:00:00Z",
+      "sizeKb": 185,
+      "riskTypes": ["Ganga Riverine Flood", "Seasonal Waterlogging", "Heatwave"],
+      "centerCoordinates": { "lat": 25.3757, "lng": 86.4735 },
+      "officialHelplines": [
+        { "name": "National Emergency Service", "number": "112", "tollFree": true },
+        { "name": "Bihar State Disaster Management Authority (BSDMA)", "number": "1070", "tollFree": true },
+        { "name": "Munger District Emergency Control Room", "number": "1077", "tollFree": true },
+        { "name": "Emergency Medical Ambulance", "number": "108", "tollFree": true }
+      ],
+      "shelters": [],
+      "hospitals": [],
+      "damRiskProfiles": [],
+      "dataAvailability": {
+        "shelters": "UNAVAILABLE_PENDING_DISTRICT_SURVEY",
+        "hospitals": "UNAVAILABLE_PENDING_DISTRICT_SURVEY",
+        "damRiskProfiles": "UNAVAILABLE_PENDING_HYDROLOGICAL_FEED"
+      },
+      "notice": "Official Munger district shelter and GIS dataset pending district administration deployment."
+    }
+  ],
+  "ndmaSafetyProtocols": {
+    "cyclone": {
+      "title": "Cyclone Preparedness & Response",
+      "source": "National Disaster Management Authority (NDMA)",
+      "lastUpdated": "2026-01-15",
+      "dos": [
+        "Inspect your house; secure loose roof tiles, tin sheets, and overhangs.",
+        "Store at least 72 hours of drinking water in clean covered containers.",
+        "Keep battery-powered torches, portable power banks, and non-perishable dry rations ready.",
+        "Keep livestock untied if safe shelter cannot accommodate them, allowing them to flee rising water.",
+        "Turn off central gas valves and main electrical circuit breakers if flooding starts."
+      ],
+      "donts": [
+        "Do NOT venture outside when the eye of the storm passes (winds temporarily drop, but fierce reverse gusts follow immediately).",
+        "Do NOT touch downed power lines or step into puddles near broken utility poles.",
+        "Do NOT rely on unverified social media voice notes — monitor official All India Radio / DD Sahyadri/Odia broadcasts.",
+        "Do NOT drive through flooded bridges or causeways (less than 30 cm of moving water can float a vehicle)."
+      ],
+      "whenToSeekHelp": [
+        "Structural roof collapse or wall breach.",
+        "Severe penetrating traumatic injury or profuse bleeding.",
+        "Rising flood waters exceeding knee height with no upper floor access."
+      ]
+    },
+    "flood": {
+      "title": "Flooding & Waterlogging Response",
+      "source": "NDMA / Indian Red Cross Society",
+      "lastUpdated": "2026-02-10",
+      "dos": [
+        "Move immediately to the highest accessible floor or designated cyclone/flood shelter.",
+        "Boil all drinking water for at least 3 minutes, or use chlorine purification tablets (1 tablet per 20L).",
+        "Keep identification documents, land titles, and medicines in double-sealed waterproof plastic zip pouches.",
+        "Signal rescue teams using bright cloth, whistles (3 short blasts is universal emergency signal), or torch flashes."
+      ],
+      "donts": [
+        "Do NOT walk barefoot through stagnant flood water due to high risk of leptospirosis and submerged sharp debris.",
+        "Do NOT consume food that has been in contact with flood waters.",
+        "Do NOT drink untreated tap or tube-well water in inundated zones."
+      ],
+      "whenToSeekHelp": [
+        "Signs of waterborne infection: high fever, muscle cramps, severe vomiting, or dehydration.",
+        "Snakebite or deep lacerations from submerged iron rods.",
+        "Stranded infants, elderly, or pregnant individuals unable to evacuate."
+      ]
+    },
+    "heatwave": {
+      "title": "Severe Heatwave & Sunstroke",
+      "source": "Ministry of Health & Family Welfare / NDMA",
+      "lastUpdated": "2026-03-01",
+      "dos": [
+        "Drink oral rehydration salts (ORS), lemon water (nimbu pani), coconut water, or buttermilk frequently.",
+        "Wear loose, light-colored, full-sleeve cotton clothing and wide-brim hats or umbrellas.",
+        "Move anyone showing dizziness or disorientation into shaded, well-ventilated rooms immediately.",
+        "Apply wet cloth packs to the neck, armpits, and groin to rapidly lower core body temperature."
+      ],
+      "donts": [
+        "Do NOT leave children or pets inside parked vehicles even for minutes.",
+        "Do NOT consume excessive caffeinated drinks or alcohol which exacerbate dehydration.",
+        "Do NOT force heavy solid meals on an overheated, nauseous individual."
+      ],
+      "whenToSeekHelp": [
+        "Body temperature exceeding 103°F (39.4°C) with dry, hot, red skin (lack of sweating).",
+        "Confusion, slurred speech, hallucinations, or loss of consciousness."
+      ]
+    },
+    "traumaFirstAid": {
+      "title": "Traumatic Injury & Bleeding Control",
+      "source": "Indian Red Cross Society / NDMA First Responder Manual",
+      "lastUpdated": "2026-01-20",
+      "dos": [
+        "Apply firm, continuous direct pressure onto bleeding wounds with a clean cloth or bandage for at least 10 minutes without lifting.",
+        "Elevate the injured bleeding limb above heart level if no fracture is suspected.",
+        "Keep an injured person lying flat and warm to prevent shock.",
+        "Immobilize broken limbs using cardboard, wooden splints, or rolled newspapers wrapped snugly with cloth."
+      ],
+      "donts": [
+        "Do NOT remove embedded objects (knife, iron rod, glass) from wounds — stabilize the object in place with padding.",
+        "Do NOT administer medicines, pain relievers, or sedatives without professional medical advice.",
+        "Do NOT give fluids or food to an unconscious or heavily bleeding person."
+      ],
+      "whenToSeekHelp": [
+        "Pulsatile, spurting blood that does not stop after 10 minutes of direct pressure.",
+        "Suspected head, neck, or spine trauma with numbness or loss of sensation.",
+        "Open compound fractures where bone is visible."
+      ]
+    }
+  }
+}

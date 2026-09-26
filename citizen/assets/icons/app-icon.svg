@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D32F2F" />
+      <stop offset="100%" stop-color="#9A0007" />
+    </linearGradient>
+    <linearGradient id="bridgeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#E2E8F0" />
+    </linearGradient>
+  </defs>
+  <!-- Background Badge -->
+  <rect width="512" height="512" rx="108" fill="#121820"/>
+  
+  <!-- Outer Shield -->
+  <path d="M256 64 L416 128 C416 288 336 384 256 432 C176 384 96 288 96 128 Z" 
+        fill="url(#shieldGrad)" stroke="#FF6659" stroke-width="8" stroke-linejoin="round"/>
+  
+  <!-- Bridge Arch (Setu) & Emergency Beacon -->
+  <!-- Pillar Left -->
+  <rect x="180" y="250" width="24" height="96" rx="6" fill="url(#bridgeGrad)" />
+  <!-- Pillar Right -->
+  <rect x="308" y="250" width="24" height="96" rx="6" fill="url(#bridgeGrad)" />
+  <!-- Suspended Arch -->
+  <path d="M150 260 Q 256 210 362 260" fill="none" stroke="url(#bridgeGrad)" stroke-width="20" stroke-linecap="round"/>
+  <!-- Road deck -->
+  <line x1="140" y1="310" x2="372" y2="310" stroke="#FFFFFF" stroke-width="14" stroke-linecap="round"/>
+  
+  <!-- Radio Wave / SOS Pulse (Beacon) -->
+  <circle cx="256" cy="180" r="16" fill="#FFEB3B"/>
+  <path d="M226 150 A 44 44 0 0 1 286 150" fill="none" stroke="#FFEB3B" stroke-width="8" stroke-linecap="round"/>
+  <path d="M206 130 A 72 72 0 0 1 306 130" fill="none" stroke="#FFEB3B" stroke-width="8" stroke-linecap="round" opacity="0.8"/>
+  <path d="M186 110 A 100 100 0 0 1 326 110" fill="none" stroke="#FFEB3B" stroke-width="8" stroke-linecap="round" opacity="0.5"/>
+</svg>
