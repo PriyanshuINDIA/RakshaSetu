@@ -1,4 +1,5 @@
-RakshaSetu
+#RakshaSetu
+
 A platform for emergency contact and quick action
 When seconds count, RakshaSetu helps people reach emergency staff through one
 shared setup.
@@ -45,10 +46,14 @@ Rescue or resource team
 Start the work and use the assigned items.
 Citizen
 Get updates on what is happening.
+
 The core workflow is:
 Report → Coordinate → Respond → Track
+
 #Key features
-1.Emergency SOS
+
+1. Emergency SOS
+   
 People can start an SOS from the Citizen App.
 After that, the case is saved in the system. Authorized staff can then view it.
 Incident flow
@@ -63,7 +68,9 @@ Check the details for each incident.
 Send rescue teams.
 Change the response stage.
 Follow each case as it moves through the stages.
+
 2. Urgent resource requests
+   
 People can ask for needed supplies using the platform.
 Officials can look at each request, choose who handles it, and follow its progress until it
 is done.
@@ -76,7 +83,9 @@ IN_TRANSIT
  to
 DELIVERED
 This gives a clear process, not just help by phone calls or chat messages.
+
 3. Shelter Support
+   
 People can:
 - Check shelter listings
 - Find nearby shelters
@@ -84,7 +93,9 @@ People can:
 - Open route directions
 Officials can run the shelter data and track whether each shelter is operating.
 This demo setup is for Munger, Bihar right now.
+
 4. Multilingual Interface
+   
 RakshaSetu lets users choose from 23 languages.
 English
 Hindi
@@ -110,7 +121,9 @@ Tamil
 Telugu
 Urdu
 Right to Left layout is available for Urdu and Sindhi.
+
 5. Support for low connectivity
+   
 RakshaSetu works even when the network is weak or unstable.
 In the Citizen App, the system has a few built-in tools. They help when a user is offline or
 the signal drops. These include:
@@ -125,31 +138,46 @@ For syncing, RakshaSetu uses a practical plan. It is a best-effort sync that kee
 It also follows idempotent behavior so repeats do not cause extra harm.
 RakshaSetu does not promise a perfect zero-loss outcome for every device and every
 kind of network failure.
+
 #System Architecture
+
+
 Citizen App
+
 - Emergency SOS
 - Resource Requests
 - Shelter Assistance
 - Location
 - Multilingual UI
+  
 Connection layer
+
 - HTTPS
 - Supabase
+  
 Supabase services
+
 - User sign-in
 - PostgreSQL data store
 - Row Level Security
 - Realtime updates
 - RPC and server rules
+  
 Realtime feed and API
+
 - Send updates to the next system
+  
 Authority / EOC Dashboard
+
 - Incident Management
 - Rescue Teams
 - Resource Management
 - Shelter Management
 - Response Tracking
+
+  
 #Security and Privacy
+
 Security runs at more than one layer.
 Authentication
 Supabase Auth is used for these tasks:
@@ -175,23 +203,34 @@ Security Practices
 - Citizen and Authority data are kept in separate auth storage
 - The Authority dashboard requires a logged-in user
 - Backend actions need authorization checks before they run
+  
 #Technology stack
+
+
 Frontend
+
 - HTML5
 - CSS3
 - JavaScript
 - Progressive Web App setup
+  
 Backend and database
+
 - Supabase
 - PostgreSQL
 - Supabase Authentication
 - Supabase Realtime
 - PostgreSQL RPC functions
 - Row Level Security
+  
 Deployment and version control
+
 - GitHub
 - Netlify
+
+  
 #Project Structure
+
 RakshaSetu/
 - citizen/
  - index.html
@@ -207,15 +246,20 @@ RakshaSetu/
 - docs/
 - .gitignore
 - README.md
+  
 #Regional setup
+
 This demo setup centers on:
 Munger, Bihar, India
 The app also has settings for emergency response options.
 When live operating data is missing, the app uses a different label. It may call it
 unavailable, cached, stale, prototype, or another matching status. It does not show it as
 if it is verified real time.
+
 #RakshaSetu in Simple Steps
+
 Emergency SOS
+
 - First, a citizen sends an SOS
 - Next, the incident is saved in Supabase
 - Then, the authority gets the alert
@@ -224,19 +268,24 @@ Emergency SOS
 - Then, the response state is updated
 - Afterward, the citizen sees the updates
 - Finally, the incident ends as resolved
+  
 Request for Resources
+
 - A citizen sends a resource request
 - The authority receives it
 - The request is assigned
 - The resource is sent and moves toward the spot
 - The resource arrives and is delivered
+  
 Shelter Steps
 Citizen first
 Then: View Shelter
 Next: Select Shelter
 Then: View Location
 Last: Get Directions
+
 #Testing and validation
+
 We ran the main flows from start to finish.
 Signal path
 Citizen
@@ -307,7 +356,9 @@ Avoid uploading these files or values:
 - Access tokens
 - Secret API keys
 For the web app, use only the publishable keys meant for browsers.
+
 #Future scope
+
 What comes next is listed below. These items are not part of the current release.
 - Connect to official government emergency platforms
 - Use confirmed real-time disaster updates
@@ -318,48 +369,64 @@ What comes next is listed below. These items are not part of the current release
 - Expand deployment across many districts
 - Add deeper analytics for emergency response
 - Work with more emergency services
+  
 Team: RakshaSetu (SIH 2026) — Roles & Responsibilities
+
 1) Krishan Kant — Researcher, Presenter & Team Lead
-• Study the problem statement and relevant research papers.
-• Prepare and write the content for the PPT.
-• Divide tasks among team members.
-• Track deadlines and overall project progress.
-• Present the project and explain the key concepts to the judges.
-2) Priyanshu Sharma — Developer & Module Integration
-• Write and maintain the project code.
-• Develop the Citizen PWA and Authority Dashboard.
-• Build and integrate the Supabase backend.
-• Implement the SOS flow.
-• Connect and integrate all project modules to ensure smooth communication
+- Study the problem statement and relevant research papers.
+- Prepare and write the content for the PPT.
+- Divide tasks among team members.
+- Track deadlines and overall project progress.
+- Present the project and explain the key concepts to the judges.
+
+3) Priyanshu Sharma — Developer & Module Integration
+   
+- Write and maintain the project code.
+- Develop the Citizen PWA and Authority Dashboard.
+- Build and integrate the Supabase backend.
+- Implement the SOS flow.
+- Connect and integrate all project modules to ensure smooth communication
 between them.
+
 3) Lushi Kumari — UI/UX Designer
-• Design the application interface and user experience.
-• Design the PPT layout, colors, and visual elements.
-• Prepare icons and screenshots.
-• Create flowcharts, diagrams, and other visual materials.
+   
+- Design the application interface and user experience.
+- Design the PPT layout, colors, and visual elements.
+- Prepare icons and screenshots.
+- Create flowcharts, diagrams, and other visual materials.
+
 4) Vikram Yadav — Testing & QA
-• Test the application on different mobile phones and devices.
-• Test offline functionality, including airplane-mode scenarios.
-• Verify whether SOS alerts successfully reach the Authority Dashboard.
-• Identify, document, and report bugs and usability issues.
+
+- Test the application on different mobile phones and devices.
+- Test offline functionality, including airplane-mode scenarios.
+- Verify whether SOS alerts successfully reach the Authority Dashboard.
+- Identify, document, and report bugs and usability issues.
+
 5) Shivam Kumar — Debugger & Planner
-• Fix the bugs identified during testing.
-• Debug technical and functionality-related issues.
-• Assist in planning project tasks and implementation.
-• Support the team in organizing and prioritizing development work.
-• Help with project presentation and answer questions from the judges.
+   
+- Fix the bugs identified during testing.
+- Debug technical and functionality-related issues.
+- Assist in planning project tasks and implementation.
+- Support the team in organizing and prioritizing development work.
+- Help with project presentation and answer questions from the judges.
+
 6) Ritik Kumar — Field Validation & Outreach
-• Demonstrate the application to real users.
-• Conduct usability testing by observing whether users can find the SOS button
+    
+- Demonstrate the application to real users.
+- Conduct usability testing by observing whether users can find the SOS button
 without prior instructions.
-• Collect and document user feedback.
-• Work on the distribution and outreach strategy through schools, Panchayats, and
+- Collect and document user feedback.
+- Work on the distribution and outreach strategy through schools, Panchayats, and
 Jeevika groups.
+
 #License
+
 This work is meant for learning, hackathons, and open-source coding.
 Pick the license for the repo based on what the team decides, then add it to the final
 repository.
+
 #Acknowledgement
+
 RakshaSetu was built as a practical project for disaster support and emergency
 communication.
 The goal is to link people with emergency teams using one shared way of working. It is
