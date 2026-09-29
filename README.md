@@ -6,23 +6,33 @@ shared setup.
 RakshaSetu is a web service for urgent moments. It brings citizens and the right
 emergency teams together during disasters and other tense events.
 The platform is split into two areas.
-- Citizen app
- For sending an emergency report, asking for help or items, and finding nearby shelters.
-- Authority or EOC dashboard
- For reading incoming reports, setting rescue tasks, following progress, requesting
+
+> Citizen app
+  
+- For sending an emergency report, asking for help or items, and finding nearby shelters.
+
+> Authority or EOC dashboard
+  
+- For reading incoming reports, setting rescue tasks, following progress, requesting
 supplies, and keeping track of how the response is going.
 Both sides use the same Supabase backend. It supports sign in, uses PostgreSQL
 storage, and pushes live updates. It also uses role based access rules so permissions
 match the user type.
+
 Live demo
 Citizen app
 https://rakshasetu-citizen.netlify.app
+
 Authority or EOC dashboard
 https://rakshasetu-authority.netlify.app
+
 Note: the dashboard only works with a logged in authority account.
-Problem statement
+
+> Problem statement
+
 During crises, messages between citizens and response teams often do not move well.
 They can stall, get sent in separate paths, or show up late.
+
 These issues tend to repeat.
 - It is hard to send an emergency report quickly
 - People struggle to see the current status of the incident
@@ -31,21 +41,25 @@ These issues tend to repeat.
 - Shelters are hard to locate
 - Weak network coverage makes calls and messages unreliable
 - Different languages can add confusion
+  
 RakshaSetu aims to address these gaps. It connects the citizen side and the authority
 side into one linked process.
-Our solution
+
+> Our solution
+
 RakshaSetu creates a clear web workflow for citizens and emergency authorities.
- RAKSHASETU
-Citizen
-I need help. SOS. I also request resources.
-Supabase backend
-Store the data. Send live updates.
-Authority or EOC
-See the request and handle it.
-Rescue or resource team
-Start the work and use the assigned items.
-Citizen
-Get updates on what is happening.
+
+# RAKSHASETU
+
+> Citizen
+- I need help.
+- SOS.
+- I also request resources.
+- Supabase backend Store the data.
+- Send live updates.
+- Authority or EOC See the request and handle it.
+- Rescue or resource team Start the work and use the assigned items.
+- Citizen Get updates on what is happening.
 
 The core workflow is:
 Report → Coordinate → Respond → Track
